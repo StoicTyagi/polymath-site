@@ -4,11 +4,29 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Anant's Neural Net · three views of a leaky brain</title>
+<meta name="description" content="A messy index of the things I keep returning to. Eight clusters, forty-three nodes, six cross-wires — three ways to read it.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#EDE6D2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1F18" media="(prefers-color-scheme: dark)">
+
+<link rel="canonical" href="https://ananttyagi.in/neural-net/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Anant's Neural Net · three views of a leaky brain">
+<meta property="og:description" content="Eight clusters, forty-three nodes, six cross-wires — three ways to read it.">
+<meta property="og:url" content="https://ananttyagi.in/neural-net/">
+<meta property="og:image" content="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 630'><rect width='1200' height='630' fill='%230E1F18'/><circle cx='600' cy='315' r='8' fill='%23D4FF3A'/><circle cx='600' cy='315' r='40' fill='none' stroke='%23D4FF3A' stroke-width='1.5' opacity='.7'/><circle cx='420' cy='220' r='5' fill='%23E8E2D1'/><circle cx='780' cy='240' r='5' fill='%23E8E2D1'/><circle cx='720' cy='420' r='5' fill='%23E8E2D1'/><circle cx='460' cy='430' r='5' fill='%23E8E2D1'/><line x1='420' y1='220' x2='600' y2='315' stroke='%23E8E2D1' stroke-width='1' opacity='.4'/><line x1='780' y1='240' x2='600' y2='315' stroke='%23E8E2D1' stroke-width='1' opacity='.4'/><line x1='720' y1='420' x2='600' y2='315' stroke='%23E8E2D1' stroke-width='1' opacity='.4'/><line x1='460' y1='430' x2='600' y2='315' stroke='%23E8E2D1' stroke-width='1' opacity='.4'/><text x='600' y='560' font-family='Georgia,serif' font-size='40' font-style='italic' fill='%23E8E2D1' text-anchor='middle'>Neural Net</text></svg>">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Anant's Neural Net">
+<meta name="twitter:description" content="Three views of a leaky brain.">
+
+<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-30 -30 60 60'><circle r='6' fill='%23C8341E'/><circle r='14' fill='none' stroke='%2315110D' stroke-width='1.2'/><circle r='22' fill='none' stroke='%2315110D' stroke-width='.8' opacity='.5'/></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-30 -30 60 60'><rect x='-30' y='-30' width='60' height='60' fill='%23EDE6D2'/><circle r='6' fill='%23C8341E'/><circle r='14' fill='none' stroke='%2315110D' stroke-width='1.2'/><circle r='22' fill='none' stroke='%2315110D' stroke-width='.8' opacity='.5'/></svg>">
 
 <script>(function(){var m=localStorage.getItem('polymath-mode')||'light';document.documentElement.dataset.mode=m;})();</script>
 
-<link rel="preconnect" href="https://fonts.bunny.net">
-<link href="https://fonts.bunny.net/css?family=anton:400|fraunces:400,500,600,700,800,900|inter:400,500,600,700,800,900|jetbrains-mono:400,500|instrument-serif:400i&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link rel="dns-prefetch" href="https://i.ytimg.com">
+<link href="https://fonts.bunny.net/css?family=anton:400|fraunces:400,500,600,700|inter:400,500,600,700|jetbrains-mono:400,500|instrument-serif:400i&display=swap" rel="stylesheet">
 
 <style>
 /* LIGHT (default) — paper/ink palette */
@@ -68,6 +86,7 @@ body::before{
   opacity: var(--noise-opacity);
   mix-blend-mode: var(--noise-blend);
 }
+@media (max-width: 640px){ body::before{ display:none; } }
 
 /* ============ TOPBAR ============ */
 .topbar{
@@ -414,19 +433,21 @@ footer a:hover{ color:var(--yellow); }
 </head>
 <body>
 
-<div class="topbar">
+<header class="topbar" role="banner">
   <div class="topleft">
-    <a href="../" class="wordmark"><svg class="bolt" viewBox="0 0 14 18" fill="currentColor"><polygon points="8,0 0,11 5,11 4,18 14,6 8,6"/></svg>← Anant Tyagi</a>
+    <a href="../" class="wordmark" aria-label="Back to Anant Tyagi portfolio"><svg class="bolt" viewBox="0 0 14 18" fill="currentColor" aria-hidden="true" focusable="false"><polygon points="8,0 0,11 5,11 4,18 14,6 8,6"/></svg>← Anant Tyagi</a>
     <a href="../" class="backlink">← back to portfolio</a>
   </div>
-  <div class="topright">
+  <nav class="topright" aria-label="Primary">
     <span class="here">Page 02 · Neural Net</span>
-    <button class="mode-toggle" id="mode-toggle" aria-label="Toggle color mode" type="button">
-      <span class="mode-icon">☀</span><span class="mode-label">LIGHT</span>
+    <button class="mode-toggle" id="mode-toggle" aria-label="Toggle color mode" aria-pressed="false" type="button">
+      <span class="mode-icon" aria-hidden="true">☀</span><span class="mode-label">LIGHT</span>
     </button>
-    <span class="pill" id="versionToggle">v3 · live →</span>
-  </div>
-</div>
+    <button class="pill" id="versionToggle" type="button" aria-label="Open tweaks panel">v3 · live →</button>
+  </nav>
+</header>
+
+<main>
 
 <section class="intro" data-screen-label="01 Intro">
   <div>
@@ -443,9 +464,9 @@ footer a:hover{ color:var(--yellow); }
     </p>
     <div class="stats">
       <span><b>8</b> clusters</span>
-      <span><b>43</b> nodes</span>
+      <span><b>51</b> nodes</span>
       <span><b class="red">6</b> cross-wires</span>
-      <span><b>17</b> still learning</span>
+      <span><b>21</b> still learning</span>
     </div>
   </div>
 </section>
@@ -513,17 +534,19 @@ footer a:hover{ color:var(--yellow); }
     <p>None of these are mine alone. Most of them are borrowed off people more patient than me. The map gets bigger every year. That's the part I like.</p>
   </div>
   <div class="right">
-    <a class="btn-block is-red" href="https://anantt.substack.com" target="_blank" rel="noopener">Read what I'm thinking →</a>
+    <a class="btn-block is-red" href="https://ananttyagi.substack.com" target="_blank" rel="noopener">Read what I'm thinking →</a>
     <a class="btn-block" href="../">← Back to the landing</a>
   </div>
 </section>
 
-<footer>
+</main>
+
+<footer role="contentinfo">
   <span>© 2026. A small page about a leaky brain.</span>
   <div class="links">
-    <a href="mailto:hello@anant.tyagi">Email</a>
-    <a href="https://anantt.substack.com" target="_blank" rel="noopener">Letters</a>
-    <a href="#">X</a>
+    <a href="#" data-email-user="ananttyagi13" data-email-host="gmail.com" class="js-email" aria-label="Email">Email</a>
+    <a href="https://ananttyagi.substack.com" target="_blank" rel="noopener">Letters</a>
+    <a href="https://x.com/ananttyagi7" target="_blank" rel="noopener">X</a>
     <a href="../">Landing</a>
   </div>
 </footer>
@@ -564,10 +587,23 @@ footer a:hover{ color:var(--yellow); }
     localStorage.setItem('polymath-mode', m);
     tog.querySelector('.mode-icon').textContent = m === 'dark' ? '☾' : '☀';
     tog.querySelector('.mode-label').textContent = m.toUpperCase();
+    tog.setAttribute('aria-pressed', String(m === 'dark'));
+    document.querySelectorAll('meta[name="theme-color"]').forEach(mt => mt.setAttribute('content', m === 'dark' ? '#0E1F18' : '#EDE6D2'));
   }
   applyMode(localStorage.getItem('polymath-mode') || 'light');
   tog.addEventListener('click', ()=>{
     applyMode(document.documentElement.dataset.mode === 'dark' ? 'light' : 'dark');
+  });
+})();
+
+/* email obfuscation */
+(function(){
+  document.querySelectorAll('.js-email').forEach(a => {
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      const u = a.dataset.emailUser, h = a.dataset.emailHost;
+      if (u && h) window.location.href = 'mailto:' + u + '@' + h;
+    });
   });
 })();
 
@@ -651,7 +687,7 @@ const DATA = {
       subs:[
         { id:'push/pull/legs', lvl:1, voice:"Four to five sessions a week. The grammar holds." },
         { id:'zone-2',         lvl:0, voice:"Boring on purpose. The point is the boredom." },
-        { id:'mobility',       lvl:0, voice:"Started taking it seriously around 30. Should've at 20." },
+        { id:'mobility',       lvl:0, voice:"Started taking it seriously last year. Should've five years ago." },
         { id:'sleep',          lvl:0, voice:"Eight hours, dark room, no phone. I'm bad at it." },
         { id:'deload',         lvl:0, voice:"The hardest discipline is doing less, on purpose." },
         { id:'8-year streak',  lvl:1, voice:"Started 2018. Hasn't stopped. The longest thing I run." },
@@ -1667,7 +1703,7 @@ render();
   </div>
   <span class="mp-hint" aria-hidden="true">Tap anywhere to unmute</span>
   <button class="mp-min" id="mpMin" aria-label="Minimize player" type="button">−</button>
-  <div id="ytFrame" style="position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;pointer-events:none;"></div>
+  <div id="ytFrame" tabindex="-1" aria-hidden="true" style="position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;pointer-events:none;"></div>
 </div>
 
 <script src="https://www.youtube.com/iframe_api"></script>

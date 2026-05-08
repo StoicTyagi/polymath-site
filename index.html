@@ -4,11 +4,29 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Anant Tyagi · Operator. Filmmaker. Comedian.</title>
+<meta name="description" content="Anant Tyagi — operator, filmmaker, comedian. Five concurrent games: sales at MAF, a stealth build, films, body, and a long reading habit. Based in Bombay.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#EDE6D2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1F18" media="(prefers-color-scheme: dark)">
+
+<link rel="canonical" href="https://ananttyagi.in/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Anant Tyagi · Operator. Filmmaker. Comedian.">
+<meta property="og:description" content="Five concurrent games — sales, build, films, body, books. Bombay, MMXXVI.">
+<meta property="og:url" content="https://ananttyagi.in/">
+<meta property="og:image" content="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 630'><rect width='1200' height='630' fill='%230E1F18'/><circle cx='600' cy='315' r='8' fill='%23D4FF3A'/><circle cx='600' cy='315' r='40' fill='none' stroke='%23D4FF3A' stroke-width='1.5' opacity='.7'/><circle cx='600' cy='315' r='90' fill='none' stroke='%23E8E2D1' stroke-width='1' opacity='.45'/><circle cx='600' cy='315' r='160' fill='none' stroke='%23E8E2D1' stroke-width='1' opacity='.3'/><circle cx='600' cy='315' r='240' fill='none' stroke='%23E8E2D1' stroke-width='1' opacity='.18'/><text x='600' y='540' font-family='Georgia,serif' font-size='44' font-style='italic' fill='%23E8E2D1' text-anchor='middle'>Anant Tyagi</text><text x='600' y='580' font-family='monospace' font-size='14' letter-spacing='6' fill='%23D4FF3A' text-anchor='middle'>FIVE CONCURRENT MOTIONS</text></svg>">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Anant Tyagi · Operator. Filmmaker. Comedian.">
+<meta name="twitter:description" content="Five concurrent games — sales, build, films, body, books. Bombay, MMXXVI.">
+
+<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-30 -30 60 60'><circle r='6' fill='%23C8341E'/><circle r='14' fill='none' stroke='%2315110D' stroke-width='1.2'/><circle r='22' fill='none' stroke='%2315110D' stroke-width='.8' opacity='.5'/></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-30 -30 60 60'><rect x='-30' y='-30' width='60' height='60' fill='%23EDE6D2'/><circle r='6' fill='%23C8341E'/><circle r='14' fill='none' stroke='%2315110D' stroke-width='1.2'/><circle r='22' fill='none' stroke='%2315110D' stroke-width='.8' opacity='.5'/></svg>">
 
 <script>(function(){var m=localStorage.getItem('polymath-mode')||'light';document.documentElement.dataset.mode=m;})();</script>
 
-<link rel="preconnect" href="https://fonts.bunny.net">
-<link href="https://fonts.bunny.net/css?family=anton:400|fraunces:300,400,500,600,700,800,900|inter:300,400,500,600,700,800,900|jetbrains-mono:400,500|instrument-serif:400i&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link rel="dns-prefetch" href="https://i.ytimg.com">
+<link href="https://fonts.bunny.net/css?family=anton:400|fraunces:300,400,500,600,700,800,900|inter:400,500,600,700|jetbrains-mono:400,500|instrument-serif:400i&display=swap" rel="stylesheet">
 
 <style>
 :root{
@@ -85,13 +103,14 @@ body{
 a{ color:inherit; text-decoration:none; }
 button{ font:inherit; color:inherit; background:none; border:0; cursor:pointer; }
 
-/* paper noise grain — light only */
+/* paper noise grain — light only; disabled on small screens to save mobile-Safari paint */
 body::before{
   content:""; position:fixed; inset:0; pointer-events:none; z-index:1;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.08  0 0 0 0 0.07  0 0 0 0 0.05  0 0 0 0.18 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
   opacity:.55; mix-blend-mode:multiply;
 }
 :root[data-mode="dark"] body::before{ display:none; }
+@media (max-width: 640px){ body::before{ display:none; } }
 
 /* film grain — dark only */
 body::after{
@@ -234,6 +253,8 @@ main{ overflow-x: clip; position:relative; z-index:2; }
 .hero-bg svg{ width:100%; height:100%; display:block; }
 /* contour-line bg in dark mode now reduced — painting carries the layer */
 :root[data-mode="dark"] .hero-bg{ display:block; opacity:.025; }
+/* dark-mode-only: hide bg svg on small screens for paint cost */
+@media (max-width: 540px){ :root[data-mode="dark"] .hero-bg{ display:none; } }
 
 .hero-meta{
   grid-column:1/-1; grid-row: 1;
@@ -304,9 +325,6 @@ html:not([data-mode="dark"]) .hero .orrery .planet-pulse{ stroke: var(--yellow);
 }
 :root[data-mode="dark"] .hero-meta{ color: rgba(232,226,209,.72); }
 :root[data-mode="dark"] .hero .scroll-cue{ color: rgba(232,226,209,.62); }
-
-/* hero detail crop removed — hero stays clean */
-.hero-detail{ display:none !important; }
 
 @media (max-width: 980px){
   .hero{ grid-template-columns: 1fr; padding-top:84px; }
@@ -435,15 +453,16 @@ html:not([data-mode="dark"]) .hero .orrery .planet-pulse{ stroke: var(--yellow);
 @keyframes rowIn{ to{ opacity:1; transform:none; } }
 .dek, .scroll-cue{ opacity:0; animation: rowIn 1s ease .55s forwards; }
 .hero-right{ opacity:0; animation: orrIn 1.4s cubic-bezier(.2,.7,.2,1) .25s forwards; }
-.hero-detail{ animation: detailIn 1.4s ease .9s both; }
-@keyframes detailIn{ from{ opacity:0; transform: translateY(-6px); } to{ opacity:.82; transform:none; } }
 @keyframes orrIn{ from{ opacity:0; transform: scale(.9) rotate(-6deg); } to{ opacity:1; transform:none; } }
 
 @media (prefers-reduced-motion: reduce){
-  .bigtype .row, .dek, .scroll-cue, .hero-right, .hero-detail{ opacity:1; transform:none; animation:none; }
+  .bigtype .row, .dek, .scroll-cue, .hero-right{ opacity:1; transform:none; animation:none; }
   .spin-shell{ animation:none; }
   .scroll-cue .line::after{ animation:none; }
   .orrery .planet-pulse.on{ animation:none; }
+  .marquee .track{ animation:none; }
+  .music-player[data-state="playing"] .mp-album img{ animation:none; transform:none; }
+  .music-player[data-state="playing"] .mp-eq span{ animation:none; }
 }
 
 /* ============ FOLIO RIBBON (dark only) ============ */
@@ -1519,11 +1538,10 @@ html:not([data-mode="dark"]) .hero .orrery text{ fill: rgba(242,233,208,.78); }
   .card .title{ font-size: clamp(34px, 9vw, 56px); }
   /* PMS panel — ensure single column at narrow widths */
   .pms{ grid-template-columns: 1fr; gap:18px; }
-  /* heatmap — make sure the parent does not eat overflow-x */
-  .heatmap-wrap{ padding:14px; overflow-x:auto; }
-  .heatmap{ overflow-x:auto; gap:1.5px; min-width:0; }
-  .heatmap .col{ min-width:6px; gap:1.5px; }
-  .heatmap .cell{ min-width:6px; }
+  /* heatmap — give grid an intrinsic min width so cells can't go microscopic */
+  .heatmap-wrap{ padding:14px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .heatmap{ grid-template-columns: repeat(52, minmax(7px, 1fr)); gap:1.5px; min-width: 416px; }
+  .heatmap .col{ gap:1.5px; }
 
   /* poster headline — bring floor down so 'Concurrentem' doesn't overflow */
   .poster h2.poster-head{ font-size: clamp(44px, 13vw, 180px); max-width: 100%; }
@@ -1535,8 +1553,12 @@ html:not([data-mode="dark"]) .hero .orrery text{ fill: rgba(242,233,208,.78); }
 }
 
 @media (max-width: 380px){
-  .wordmark{ font-size:17px; }
-  :root[data-mode="dark"] .wordmark{ font-size:17px; }
+  :root{ --gutter: 16px; }
+  .topbar{ padding:12px 16px; gap:6px; }
+  .topright{ gap:6px; }
+  .wordmark{ font-size:16px; gap:6px; }
+  :root[data-mode="dark"] .wordmark{ font-size:16px; }
+  .btn-pill{ padding:8px 10px; font-size:10px; }
   .bigtype{ font-size: clamp(36px, 12vw, 132px); }
   .dek{ font-size: 15px; }
   .section-head h2{ font-size: clamp(34px, 10vw, 88px); }
@@ -1545,7 +1567,9 @@ html:not([data-mode="dark"]) .hero .orrery text{ fill: rgba(242,233,208,.78); }
   .poster h2.poster-head{ font-size: clamp(38px, 12vw, 180px); }
   .signoff h4{ font-size: clamp(42px, 13vw, 200px); }
   :root[data-mode="dark"] .signoff h4{ font-size: clamp(50px, 14vw, 220px); }
-  .now-grid{ grid-template-columns: 92px 1fr; column-gap:14px; }
+  .now-grid{ grid-template-columns: 88px 1fr; column-gap:12px; }
+  /* footer collapses cleanly */
+  footer{ flex-direction:column; align-items:flex-start; gap:14px; text-align:left; }
 }
 
 /* music player — collapse to bubble by default on phones (still toggleable) */
@@ -1566,19 +1590,19 @@ html:not([data-mode="dark"]) .hero .orrery text{ fill: rgba(242,233,208,.78); }
 <body>
 
 <!-- ========== TOPBAR ========== -->
-<div class="topbar">
-  <a href="#" class="wordmark">
-    <svg class="bolt" viewBox="0 0 14 18" fill="currentColor"><polygon points="8,0 0,11 5,11 4,18 14,6 8,6"/></svg>
+<div class="topbar" role="banner">
+  <a href="/" class="wordmark" aria-label="Anant Tyagi — home">
+    <svg class="bolt" viewBox="0 0 14 18" fill="currentColor" aria-hidden="true" focusable="false"><polygon points="8,0 0,11 5,11 4,18 14,6 8,6"/></svg>
     <span>Anant Tyagi</span>
     <span class="mono-tag">· Vol I</span>
   </a>
-  <div class="topright">
-    <a href="./neural-net/" class="btn-pill inv" aria-label="Neural Net"><span class="nn-text">Neural Net </span><span class="arr">↗</span></a>
-    <button class="mode-toggle" id="mode-toggle" aria-label="Toggle color mode" type="button">
-      <span class="mode-icon">☀</span><span class="mode-label">LIGHT</span>
+  <nav class="topright" aria-label="Primary">
+    <a href="./neural-net/" class="btn-pill inv" aria-label="Neural Net"><span class="nn-text">Neural Net </span><span class="arr" aria-hidden="true">↗</span></a>
+    <button class="mode-toggle" id="mode-toggle" aria-label="Toggle color mode" aria-pressed="false" type="button">
+      <span class="mode-icon" aria-hidden="true">☀</span><span class="mode-label">LIGHT</span>
     </button>
-    <a href="mailto:ananttyagi13@gmail.com" class="btn-pill"><span class="dot"></span>Coffee?</a>
-  </div>
+    <a href="#" data-email-user="ananttyagi13" data-email-host="gmail.com" class="btn-pill js-email" aria-label="Email Anant"><span class="dot" aria-hidden="true"></span>Coffee?</a>
+  </nav>
 </div>
 
 <main>
@@ -1718,7 +1742,7 @@ Always reading. Always shipping. <span class="serif">Mostly a curious kid with t
           <div class="pms">
             <div><div class="kicker">The Problem</div><div class="body">Selling to people who get pitched ten times before lunch.</div></div>
             <div><div class="kicker">The Move</div><div class="body">Trust before features, long cycles, useful before profitable.</div></div>
-            <div><div class="kicker">The State</div><div class="body">$4M revenue and $3M ARR in 2025. More this year.</div></div>
+            <div><div class="kicker">The State</div><div class="body">$4M revenue, $3M ARR in 2025.</div></div>
           </div>
 
           <div class="metrics">
@@ -1729,8 +1753,8 @@ Always reading. Always shipping. <span class="serif">Mostly a curious kid with t
           </div>
 
           <div class="cta-row">
-            <a href="#" class="btn-block solid">Field notes →</a>
-            <a href="#" class="btn-block">LinkedIn ↗</a>
+            <a href="https://ananttyagi.substack.com" class="btn-block solid">Field notes →</a>
+            <a href="https://www.linkedin.com/in/ananttyagi13/" class="btn-block" rel="noopener noreferrer" target="_blank">LinkedIn ↗</a>
           </div>
         </div>
       </div></div></div>
@@ -1765,7 +1789,7 @@ Always reading. Always shipping. <span class="serif">Mostly a curious kid with t
         <div class="panel-content">
           <div class="pms">
             <div><div class="kicker">The Problem</div><div class="body">A consumer category most builders are tired of.</div></div>
-            <div><div class="kicker">The Move</div><div class="body">Quiet build, letters to the people who ask. Fratty (saw the events-app category two years before Partyful, didn't ship fast enough) taught me distribution is the first job. Polygon taught me what shipping looks like: dApp Store Kit, Polygon Village, Ecosystem Explorer.</div></div>
+            <div><div class="kicker">The Move</div><div class="body">Quiet build, letters to the people who ask. Fratty (an events app I built before, ran out of road on funding) taught me distribution is the first job. Polygon taught me what shipping looks like.</div></div>
             <div><div class="kicker">The State</div><div class="body">Sealed for now.</div></div>
           </div>
 
@@ -1946,8 +1970,8 @@ Always reading. Always shipping. <span class="serif">Mostly a curious kid with t
           </div>
 
           <div class="cta-row">
-            <a href="https://ananttyagi.substack.com" class="btn-block solid">Read the monthly Substack →</a>
-            <a href="#" class="btn-block">2025 · year in books</a>
+            <a href="https://ananttyagi.substack.com" class="btn-block solid" rel="noopener" target="_blank">Read the monthly Substack →</a>
+            <a href="https://www.goodreads.com/user/show/ananttyagi" class="btn-block" rel="noopener" target="_blank">2025 · year in books</a>
           </div>
         </div>
       </div></div></div>
@@ -1994,9 +2018,9 @@ Always reading. Always shipping. <span class="serif">Mostly a curious kid with t
   <div class="dispatch reveal">
     <div class="kicker">★ Latest dispatch</div>
     <h3>Boil oceans <span class="serif">with</span> AI, sprinkle the salt yourself.</h3>
-    <p class="lede">A short note on where the leverage actually lives in 2026. The model does the broth. Taste is still your job.</p>
+    <p class="lede">A short note on where the actual work lives in 2026. The model does the broth. Taste is still your job.</p>
     <p>On rolling your own seasoning into other people's stockpots without ruining dinner.</p>
-    <a href="https://ananttyagi.substack.com" class="dispatch-cta">Read on Substack →</a>
+    <a href="https://ananttyagi.substack.com" class="dispatch-cta" rel="noopener" target="_blank">Read on Substack →</a>
   </div>
 
   <div class="now reveal">
@@ -2037,13 +2061,13 @@ Always reading. Always shipping. <span class="serif">Mostly a curious kid with t
 </main>
 
 <!-- ========== FOOTER ========== -->
-<footer>
+<footer role="contentinfo">
   <span>© 2026. No analytics that follow you home.</span>
   <div class="links">
-    <a href="mailto:ananttyagi13@gmail.com">Email</a>
-    <a href="https://ananttyagi.substack.com">Substack</a>
-    <a href="#">X</a>
-    <a href="#">RSS</a>
+    <a href="#" data-email-user="ananttyagi13" data-email-host="gmail.com" class="js-email" aria-label="Email">Email</a>
+    <a href="https://ananttyagi.substack.com" rel="noopener" target="_blank">Substack</a>
+    <a href="https://x.com/ananttyagi7" rel="noopener" target="_blank">X</a>
+    <a href="https://ananttyagi.substack.com/feed" rel="noopener" target="_blank">RSS</a>
   </div>
 </footer>
 
@@ -2058,6 +2082,10 @@ function applyMode(m){
   localStorage.setItem('polymath-mode', m);
   tog.querySelector('.mode-icon').textContent = m === 'dark' ? '☾' : '☀';
   tog.querySelector('.mode-label').textContent = m.toUpperCase();
+  tog.setAttribute('aria-pressed', String(m === 'dark'));
+  // theme-color meta also dynamically updates
+  const themeMetas = document.querySelectorAll('meta[name="theme-color"]');
+  themeMetas.forEach(mt => mt.setAttribute('content', m === 'dark' ? '#0E1F18' : '#EDE6D2'));
 }
 applyMode(localStorage.getItem('polymath-mode') || 'light');
 tog.addEventListener('click', ()=>{
@@ -2078,7 +2106,7 @@ tog.addEventListener('click', ()=>{
   g.innerHTML = s;
 })();
 
-/* orrery animation */
+/* orrery animation — pauses when hero is offscreen + when prefers-reduced-motion */
 const Orrery = (function(){
   const orbits = $$('#orbits ellipse');
   const planetGroups = $$('#planets > g');
@@ -2089,9 +2117,16 @@ const Orrery = (function(){
     rot: parseFloat((el.getAttribute('transform')||'').match(/-?\d+\.?\d*/)?.[0]||0)*Math.PI/180
   }));
   const periods=[38,64,91,112,156], phases=[0.05,0.42,0.18,0.71,0.33], dirs=[1,-1,1,1,-1];
-  let started;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let started, rafId, heroVisible = true;
+  // pause orrery when hero scrolls offscreen
+  const hero = document.querySelector('.hero');
+  if (hero && 'IntersectionObserver' in window) {
+    new IntersectionObserver(es => { heroVisible = es[0].isIntersecting; }, { threshold: 0 }).observe(hero);
+  }
   function frame(t){
     if(!started) started=t;
+    if (!heroVisible || reduceMotion){ rafId = requestAnimationFrame(frame); return; }
     const dt=(t-started)/1000;
     O.forEach((o,i)=>{
       const u = ((dt/periods[i])*dirs[i] + phases[i]) % 1;
@@ -2103,10 +2138,10 @@ const Orrery = (function(){
       const g = planetGroups[i];
       if(g) g.setAttribute('transform', `translate(${x.toFixed(2)},${y.toFixed(2)})`);
     });
-    requestAnimationFrame(frame);
+    rafId = requestAnimationFrame(frame);
   }
   return {
-    start(){ requestAnimationFrame(frame); },
+    start(){ rafId = requestAnimationFrame(frame); },
     activate(i){
       orbits.forEach(el=> el.classList.toggle('on', +el.dataset.i === i));
       planetGroups.forEach(g=>{
@@ -2207,9 +2242,10 @@ $$('#games .card').forEach(card=>{
   hm.innerHTML = html;
 })();
 
-/* marquee build */
+/* marquee build + pause when offscreen */
 (function(){
   const track = document.getElementById('track');
+  const marquee = document.querySelector('.marquee');
   const items = [
     'MAF', 'SALES BY DAY', '★', 'STEALTH', 'BUILDING', '★', 'FILMS', 'DRAFTS IN MOTION', '★',
     'CORPUS', '4-5×/WK', '★', 'LECTIO', 'TOO MANY OPEN', '★', 'NOTES FROM THE TRYING', '★'
@@ -2221,6 +2257,12 @@ $$('#games .card').forEach(card=>{
   };
   const html = items.map(colorize).join('');
   track.innerHTML = html + html;
+  // pause marquee animation when offscreen — saves paint cycles
+  if (marquee && 'IntersectionObserver' in window) {
+    new IntersectionObserver(es => {
+      track.style.animationPlayState = es[0].isIntersecting ? 'running' : 'paused';
+    }, { threshold: 0 }).observe(marquee);
+  }
 })();
 
 /* reveal observer */
@@ -2243,6 +2285,17 @@ $$('#games .card').forEach(card=>{
   };
   window.addEventListener('scroll', onScroll, { passive:true });
   onScroll();
+})();
+
+/* email obfuscation — wire mailto on click to dodge bots */
+(function(){
+  $$('.js-email').forEach(a => {
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      const u = a.dataset.emailUser, h = a.dataset.emailHost;
+      if (u && h) window.location.href = 'mailto:' + u + '@' + h;
+    });
+  });
 })();
 </script>
 <!-- ====== MUSIC PLAYER (Azuki-style) ====== -->
@@ -2412,7 +2465,7 @@ $$('#games .card').forEach(card=>{
   </div>
   <span class="mp-hint" aria-hidden="true">Tap anywhere to unmute</span>
   <button class="mp-min" id="mpMin" aria-label="Minimize player" type="button">−</button>
-  <div id="ytFrame" style="position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;pointer-events:none;"></div>
+  <div id="ytFrame" tabindex="-1" aria-hidden="true" style="position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;pointer-events:none;"></div>
 </div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
