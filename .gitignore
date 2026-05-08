@@ -1,0 +1,13 @@
+# Local state — DO NOT publish
+.herenow/
+
+# PM-only checklist (not a deliverable)
+deploy-docs/SHIP-CHECKLIST.md
+
+# Defensive
+node_modules/
+*.log
+.DS_Store
+.env
+.env.*
+.vercel

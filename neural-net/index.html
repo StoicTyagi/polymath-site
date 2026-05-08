@@ -1,0 +1,1803 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Anant's Neural Net · three views of a leaky brain</title>
+
+<script>(function(){var m=localStorage.getItem('polymath-mode')||'light';document.documentElement.dataset.mode=m;})();</script>
+
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link href="https://fonts.bunny.net/css?family=anton:400|fraunces:400,500,600,700,800,900|inter:400,500,600,700,800,900|jetbrains-mono:400,500|instrument-serif:400i&display=swap" rel="stylesheet">
+
+<style>
+/* LIGHT (default) — paper/ink palette */
+:root{
+  --paper:    #EDE6D2;
+  --paper-2:  #E2DABF;
+  --ink:      #15110D;
+  --ink-soft: rgba(21,17,13,.66);
+  --ink-mute: rgba(21,17,13,.42);
+  --ink-line: rgba(21,17,13,.16);
+  --red:    #C8341E;
+  --blue:   #1F46B0;
+  --yellow: #E8B131;
+  --shadow-fig: var(--ink);
+  --shadow-fig-locked: var(--red);
+  --noise-svg: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.08  0 0 0 0 0.07  0 0 0 0 0.05  0 0 0 0.18 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  --noise-opacity: .55;
+  --noise-blend: multiply;
+
+  --display:'Anton', Impact, sans-serif;
+  --serif:'Instrument Serif', Georgia, serif;
+  --body:'Inter', system-ui, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --gutter: clamp(20px, 4vw, 56px);
+}
+
+/* DARK — moss/bone palette mapped onto same token names so inline refs flip cleanly */
+:root[data-mode="dark"]{
+  --paper:    #0E1F18;   /* moss */
+  --paper-2:  #142A21;   /* moss-2 */
+  --ink:      #E8E2D1;   /* bone */
+  --ink-soft: rgba(232,226,209,.66);
+  --ink-mute: rgba(232,226,209,.42);
+  --ink-line: rgba(232,226,209,.18);
+  --red:      #D4FF3A;   /* citron — accent / cross-wires / locked */
+  --blue:     #5A8770;   /* verdigris — secondary accent (intro headline blue) */
+  --yellow:   #F4F1E8;   /* lunar — tertiary highlight on dark */
+  --shadow-fig: var(--ink);
+  --shadow-fig-locked: var(--red);
+  --noise-svg: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.95  0 0 0 0 0.95  0 0 0 0 0.91  0 0 0 0.06 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  --noise-opacity: .35;
+  --noise-blend: screen;
+
+  --display:'Fraunces','Times Now',Georgia,serif;
+}
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+html,body{ background:var(--paper); color:var(--ink); transition: background .3s ease, color .3s ease; }
+body{ font-family:var(--body); font-weight:500; font-size:clamp(15px,1.05vw,17px); line-height:1.5; overflow-x:hidden; }
+::selection{ background:var(--red); color:var(--paper); }
+a{ color:inherit; text-decoration:none; }
+button{ font:inherit; color:inherit; background:none; border:0; cursor:pointer; }
+
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:1;
+  background-image: var(--noise-svg);
+  opacity: var(--noise-opacity);
+  mix-blend-mode: var(--noise-blend);
+}
+
+/* ============ TOPBAR ============ */
+.topbar{
+  position:sticky; top:0; z-index:40;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px var(--gutter);
+  background:linear-gradient(180deg, var(--paper) 70%, transparent);
+  pointer-events:none;
+  gap:14px;
+}
+.topbar > *{ pointer-events:auto; }
+.topleft{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.wordmark{
+  font-family:var(--display); font-size:22px; line-height:1;
+  color:var(--red); letter-spacing:.01em; text-transform:uppercase;
+  display:inline-flex; gap:10px; align-items:center;
+}
+.wordmark .bolt{ width:14px; height:18px; }
+.wordmark:hover{ color:var(--ink); }
+.backlink{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--ink-soft); border-bottom:1px solid var(--ink-line);
+  padding-bottom:2px; transition: color .2s, border-color .2s;
+}
+.backlink:hover{ color:var(--red); border-color:var(--red); }
+.topright{
+  display:flex; gap:10px; align-items:center;
+  font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.14em;
+  color:var(--ink-soft);
+}
+.topright .here{ color:var(--red); }
+.topright .pill, .mode-toggle{
+  padding:4px 10px; border:1.5px solid var(--ink); border-radius:999px;
+  color:var(--ink); cursor:pointer; transition:all .2s;
+  font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.14em;
+  background:transparent;
+  display:inline-flex; align-items:center; gap:6px;
+}
+.topright .pill:hover, .mode-toggle:hover{ background:var(--ink); color:var(--paper); }
+.mode-toggle .mode-icon{ font-size:13px; line-height:1; }
+
+/* ============ INTRO ============ */
+.intro{
+  padding:44px var(--gutter) 24px;
+  display:grid; grid-template-columns:1.4fr 1fr;
+  gap:clamp(24px,4vw,80px); align-items:end;
+  border-bottom:2px solid var(--ink);
+}
+@media (max-width: 880px){ .intro{ grid-template-columns:1fr; } }
+.intro .ek{
+  font-family:var(--mono); font-size:11px; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--red); margin-bottom:14px;
+}
+.intro h1{
+  font-family:var(--display); font-weight:400;
+  font-size:clamp(48px, 7.4vw, 124px);
+  line-height:.86; letter-spacing:.005em; text-transform:uppercase;
+}
+.intro h1 .blue{ color:var(--blue); }
+.intro h1 .red{ color:var(--red); }
+.intro h1 .serif{ font-family:var(--serif); font-style:italic; font-weight:400; text-transform:none; letter-spacing:-0.02em; color:var(--red); }
+.intro .blurb{ font-family:var(--serif); font-style:italic; font-size:clamp(20px,1.7vw,28px); line-height:1.3; max-width:36ch; }
+.intro .blurb .red{ color:var(--red); }
+.intro .stats{
+  margin-top:14px; display:flex; gap:22px; flex-wrap:wrap;
+  font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-soft);
+}
+.intro .stats b{ color:var(--ink); font-weight:500; }
+.intro .stats .red{ color:var(--red); }
+
+/* ============ MODE BAR ============ */
+.modebar{
+  display:flex; gap:0; align-items:stretch;
+  padding:14px var(--gutter);
+  background:var(--paper-2);
+  border-bottom:2px solid var(--ink);
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--ink-soft);
+  flex-wrap:wrap;
+  gap:14px 24px;
+}
+.modebar .group{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.modebar .label{ color:var(--ink-mute); }
+.modes{ display:inline-flex; border:1.5px solid var(--ink); border-radius:999px; overflow:hidden; background:var(--paper); }
+.modes .m{
+  padding:7px 14px; cursor:pointer; transition:all .2s;
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--ink); border-right:1.5px solid var(--ink);
+  display:inline-flex; align-items:center; gap:8px;
+}
+.modes .m:last-child{ border-right:0; }
+.modes .m .gloss{ color:var(--ink-mute); font-size:9px; }
+.modes .m.on{ background:var(--ink); color:var(--paper); }
+.modes .m.on .gloss{ color:rgba(237,230,210,.6); }
+:root[data-mode="dark"] .modes .m.on .gloss{ color:rgba(14,31,24,.55); }
+.modes .m:not(.on):hover{ background:var(--paper-2); }
+
+.modebar .legend{ display:flex; gap:20px; flex-wrap:wrap; align-items:center; margin-left:auto; }
+.modebar .legend .dot{ width:9px; height:9px; border-radius:50%; display:inline-block; vertical-align:-1px; margin-right:8px; border:1.5px solid var(--ink); }
+.modebar .legend .dot.solid{ background:var(--ink); }
+.modebar .legend .dot.hollow{ background:transparent; }
+.modebar .legend .dot.eigen{ background:var(--red); border-color:var(--red); width:11px; height:11px; }
+.modebar .legend .dash{ width:24px; height:0; border-top:1.5px dashed var(--red); display:inline-block; vertical-align:3px; margin-right:8px; }
+
+/* ============ STAGE ============ */
+.stage{
+  position:relative;
+  padding:8px var(--gutter) 36px;
+  border-bottom:2px solid var(--ink);
+  background:var(--paper);
+  overflow:hidden;
+}
+.stage-wrap{
+  position:relative; width:100%;
+  aspect-ratio: 1400/880;
+  max-height:84vh;
+  margin-top:14px;
+}
+
+.stage-wrap .axis{
+  position:absolute; font-family:var(--mono); font-size:10px; letter-spacing:.22em; text-transform:uppercase;
+  color:var(--ink-mute); pointer-events:none; z-index:2;
+}
+.axis.tl{ top:8px; left:0; }
+.axis.tr{ top:8px; right:0; }
+.axis.bl{ bottom:6px; left:0; }
+.axis.br{ bottom:6px; right:0; }
+
+/* fig card */
+.fig{
+  position:absolute; top:18px; right:18px; z-index:5;
+  background:var(--paper); border:1.5px solid var(--ink);
+  padding:14px 16px 16px; width:clamp(220px,26vw,320px);
+  box-shadow:6px 6px 0 var(--shadow-fig);
+  transition:opacity .35s ease, transform .35s ease, box-shadow .25s, background .3s, border-color .3s;
+  font-family:var(--body);
+}
+.fig .small{
+  font-family:var(--mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--red); margin-bottom:6px;
+}
+.fig .name{
+  font-family:var(--display); font-size:clamp(28px,2.4vw,40px); line-height:.95;
+  text-transform:uppercase; margin-bottom:4px;
+}
+.fig .of{
+  font-family:var(--serif); font-style:italic; font-size:14px; color:var(--ink-soft); margin-bottom:12px;
+}
+.fig .of b{ color:var(--ink); font-style:normal; font-weight:500; font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; }
+.fig .voice{
+  font-family:var(--serif); font-style:italic;
+  font-size:clamp(16px,1.2vw,19px); line-height:1.35;
+}
+.fig .lev{
+  margin-top:12px; display:flex; gap:8px; align-items:center;
+  font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-soft);
+}
+.fig .lev .pip{ width:8px; height:8px; border-radius:50%; border:1.5px solid var(--ink); }
+.fig .lev .pip.solid{ background:var(--ink); }
+.fig.locked{ box-shadow:6px 6px 0 var(--shadow-fig-locked); }
+.fig.locked .small::before{ content:"locked · "; }
+@media (max-width: 760px){
+  .fig{ position:relative; top:auto; right:auto; width:auto; margin:14px var(--gutter) 0; }
+}
+
+/* SVG */
+.netmap{ width:100%; height:100%; display:block; touch-action:none; user-select:none; }
+.netmap text{ font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; fill:var(--ink); }
+
+.netmap .frame{ fill:none; stroke:var(--ink); stroke-width:1; vector-effect:non-scaling-stroke; }
+.netmap .crosshair{ stroke:var(--ink-line); stroke-width:1; stroke-dasharray:2 4; vector-effect:non-scaling-stroke; }
+.netmap .grid{ stroke:var(--ink-line); stroke-width:1; vector-effect:non-scaling-stroke; }
+
+/* edges */
+.netmap .spoke{ fill:none; stroke:var(--ink); stroke-width:1; vector-effect:non-scaling-stroke; opacity:.34; transition: opacity .3s, stroke .3s, stroke-width .3s; }
+.netmap .orbit{ fill:none; stroke:var(--ink); stroke-width:1.2; vector-effect:non-scaling-stroke; opacity:.42; transition: opacity .3s, stroke .3s, stroke-width .3s; }
+.netmap .cross{ fill:none; stroke:var(--red); stroke-width:1.4; vector-effect:non-scaling-stroke; stroke-dasharray:4 5; opacity:.7; transition: opacity .3s, stroke-width .3s; pointer-events:stroke; cursor:pointer; }
+
+/* eigens */
+.netmap .eigen-ring{ fill:none; stroke:var(--ink); stroke-width:1.2; vector-effect:non-scaling-stroke; opacity:.55; transition: opacity .3s, stroke .3s, stroke-width .3s, r .3s; }
+.netmap .eigen-ring-2{ fill:none; stroke:var(--ink); stroke-width:1; vector-effect:non-scaling-stroke; opacity:.32; }
+.netmap .eigen-core{ fill:var(--red); transition:r .3s, fill .3s; }
+.netmap .eigen-label{ font-family:var(--display); font-size:18px; letter-spacing:.04em; fill:var(--ink); text-transform:uppercase; transition:fill .3s, font-size .3s; }
+.netmap .eigen-num{ font-family:var(--mono); font-size:9px; letter-spacing:.22em; fill:var(--ink-soft); }
+
+/* subs */
+.netmap .sub{ fill:var(--ink); stroke:var(--ink); stroke-width:1.4; vector-effect:non-scaling-stroke; transition:r .3s, fill .3s, stroke .3s; }
+.netmap .sub.hollow{ fill:var(--paper); }
+.netmap .sub-label{
+  font-family:var(--mono); font-size:9px; letter-spacing:.12em;
+  fill:var(--ink); transition: opacity .35s, fill .3s;
+}
+.netmap .cross-bg{ fill:var(--paper); }
+.netmap .cross-label{ font-family:var(--mono); font-size:8.5px; letter-spacing:.22em; fill:var(--red); text-transform:uppercase; opacity:.85; pointer-events:none; transition:opacity .3s; }
+.netmap .hit{ fill:transparent; cursor:pointer; }
+
+/* pulse particles */
+.netmap .pulse{ fill:var(--red); opacity:.95; pointer-events:none; }
+
+/* CONSTELLATION-only: hide sub-labels until cluster active or always */
+.mode-constellation .netmap .sub-label{ opacity:0; }
+.mode-constellation .netmap .cluster.active .sub-label{ opacity:1; }
+.mode-constellation .netmap.show-all .sub-label{ opacity:1; }
+
+/* GRAPH: hide eigen num + neat labels */
+.mode-graph .netmap .eigen-num{ opacity:0; }
+.mode-graph .netmap .sub-label{ opacity:.85; }
+.mode-graph .netmap .orbit{ display:none; }
+
+/* ORBIT: hide most labels except eigens; sub-labels show on hover only */
+.mode-orbit .netmap .sub-label{ opacity:0; }
+.mode-orbit .netmap .cluster.active .sub-label{ opacity:1; }
+.mode-orbit .netmap .orbit{ display:none; }
+
+/* states */
+.netmap.has-active .cluster{ opacity:.18; transition:opacity .35s; }
+.netmap.has-active .cluster.active{ opacity:1; }
+.netmap.has-active .cross{ opacity:.18; }
+.netmap.has-active .cross-label{ opacity:.18; }
+.netmap.has-active .cross.active{ opacity:1; stroke-width:2.4; }
+.netmap.has-active .cross-label.active{ opacity:1; }
+.netmap.has-cross .cluster{ opacity:.25; }
+.netmap.has-cross .cluster.cross-end{ opacity:1; }
+.netmap.has-cross .cross{ opacity:.18; }
+.netmap.has-cross .cross.active{ opacity:1; stroke-width:2.6; }
+.netmap.has-cross .cross-label.active{ opacity:1; }
+
+.netmap .cluster.active .orbit{ opacity:1; stroke:var(--red); stroke-width:1.6; }
+.netmap .cluster.active .spoke{ opacity:.7; stroke:var(--red); }
+.netmap .cluster.active .eigen-ring{ stroke:var(--red); opacity:1; }
+.netmap .cluster.active .eigen-label{ fill:var(--red); }
+.netmap .cluster.active .sub{ fill:var(--red); stroke:var(--red); }
+.netmap .cluster.active .sub.hollow{ fill:var(--paper); }
+
+/* sub-label fan-in stagger (constellation) */
+.mode-constellation .netmap .cluster.active .sub-label{
+  animation: fanIn .45s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes fanIn{
+  from{ opacity:0; transform:translate(var(--fx, 0px), var(--fy, 0px)); }
+  to{ opacity:1; transform:translate(0,0); }
+}
+
+/* breathing eigens */
+.netmap .eigen-core{ transform-origin:center; transform-box:fill-box; }
+.netmap .eigen-pulse{ fill:none; stroke:var(--red); stroke-width:1.2; opacity:0; pointer-events:none; }
+.netmap .cluster.active .eigen-pulse{ animation: eigenPulse 2s ease-out infinite; }
+@keyframes eigenPulse{
+  0%{ r:8; opacity:.55; }
+  100%{ r:38; opacity:0; }
+}
+
+/* mouse-parallax wrapper (constellation only) */
+.netmap .parallax{ transition: transform .35s cubic-bezier(.2,.8,.2,1); will-change:transform; }
+
+/* tweaks panel */
+.tweaks{
+  position:fixed; bottom:24px; right:24px; z-index:50;
+  width:300px; padding:18px;
+  background:var(--paper); border:1.5px solid var(--ink); box-shadow:6px 6px 0 var(--red);
+  font-family:var(--body); display:none;
+}
+.tweaks.show{ display:block; }
+.tweaks h4{ font-family:var(--display); font-size:18px; letter-spacing:.04em; text-transform:uppercase; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+.tweaks h4 .x{ font-family:var(--mono); font-size:11px; cursor:pointer; color:var(--ink-soft); }
+.tweaks h4 .x:hover{ color:var(--red); }
+.tweaks .row{ display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+.tweaks .row label{ font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-soft); }
+.tweaks .seg{ display:flex; border:1.5px solid var(--ink); border-radius:6px; overflow:hidden; }
+.tweaks .seg button{ flex:1; padding:8px; font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; border-right:1.5px solid var(--ink); background:var(--paper); color:var(--ink); }
+.tweaks .seg button:last-child{ border-right:0; }
+.tweaks .seg button.on{ background:var(--ink); color:var(--paper); }
+.tweaks input[type=range]{ width:100%; accent-color:var(--red); }
+
+/* ============ MOBILE STACK ============ */
+.mobile-stack{ display:none; padding:24px var(--gutter) 56px; border-bottom:2px solid var(--ink); }
+@media (max-width: 640px){
+  .stage{ display:none; }
+  .modebar{ display:none; }
+  .mobile-stack{ display:block; }
+}
+.ms-cluster{ border-top:1.5px solid var(--ink-line); padding:22px 0 20px; }
+.ms-cluster:first-of-type{ border-top:0; }
+.ms-cluster .ms-eigen{ font-family:var(--display); font-size:44px; line-height:.92; text-transform:uppercase; display:flex; align-items:baseline; gap:.4em; margin-bottom:6px; }
+.ms-cluster .ms-eigen .num{ font-family:var(--mono); font-size:11px; letter-spacing:.2em; color:var(--red); }
+.ms-cluster .ms-of{ font-family:var(--serif); font-style:italic; color:var(--ink-soft); font-size:15px; margin-bottom:14px; }
+.ms-list{ display:flex; flex-wrap:wrap; gap:8px; }
+.ms-list .pill{ display:inline-flex; align-items:center; gap:7px; padding:7px 12px; border:1.4px solid var(--ink); border-radius:999px; font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; background:var(--paper); }
+.ms-list .pill.hollow{ color:var(--ink-soft); }
+.ms-list .pill .d{ width:7px; height:7px; border-radius:50%; background:var(--ink); }
+.ms-list .pill.hollow .d{ background:transparent; border:1.4px solid var(--ink); }
+.ms-list .pill.cross{ border-color:var(--red); color:var(--red); }
+.ms-list .pill.cross .d{ background:var(--red); }
+.ms-wires{ margin-top:32px; padding-top:24px; border-top:2px solid var(--ink); }
+.ms-wires h3{ font-family:var(--display); font-size:32px; text-transform:uppercase; margin-bottom:12px; color:var(--red); }
+.ms-wires ul{ list-style:none; }
+.ms-wires li{ font-family:var(--serif); font-style:italic; font-size:18px; margin:6px 0; }
+.ms-wires li b{ font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--red); font-style:normal; font-weight:500; margin-right:8px; }
+
+/* under */
+.under{ padding:80px var(--gutter) 32px; display:grid; grid-template-columns:1fr 1fr; gap:clamp(24px,4vw,80px); align-items:end; }
+@media (max-width:760px){ .under{ grid-template-columns:1fr; } }
+.under .left h2{ font-family:var(--display); font-size:clamp(40px,5vw,80px); line-height:.96; text-transform:uppercase; color:var(--blue); max-width:16ch; }
+.under .left h2 .serif{ font-family:var(--serif); font-style:italic; font-weight:400; text-transform:none; color:var(--red); letter-spacing:-0.02em; }
+.under .left p{ margin-top:18px; font-family:var(--serif); font-style:italic; font-size:clamp(18px,1.4vw,22px); line-height:1.4; max-width:42ch; }
+.under .right{ display:flex; flex-direction:column; gap:16px; align-items:flex-start; }
+.btn-block{
+  display:inline-flex; align-items:center; gap:10px;
+  padding:14px 22px;
+  font-family:var(--display); font-weight:400; font-size:16px; line-height:1; letter-spacing:.02em; text-transform:uppercase;
+  border:2px solid var(--ink); background:var(--paper); color:var(--ink);
+  transition:all .25s;
+}
+.btn-block:hover{ background:var(--ink); color:var(--paper); transform:translate(-2px,-2px); box-shadow:4px 4px 0 var(--red); }
+.btn-block.is-red{ background:var(--red); color:var(--paper); border-color:var(--red); }
+.btn-block.is-red:hover{ background:var(--ink); border-color:var(--ink); box-shadow:4px 4px 0 var(--yellow); }
+
+footer{ background:var(--ink); color:var(--paper); padding:28px var(--gutter); display:flex; justify-content:space-between; align-items:center; gap:24px; flex-wrap:wrap; font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase; }
+footer .links{ display:flex; gap:22px; }
+footer a:hover{ color:var(--yellow); }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.001s !important; transition-duration:.001s !important; }
+}
+
+/* === Responsive QA pass === */
+@media (max-width: 640px){
+  .topbar{ padding:14px var(--gutter); gap:10px; }
+  .topleft{ gap:10px; }
+  .backlink{ display:none; }
+  .topright .here{ display:none; }
+  .topright #versionToggle{ display:none; }
+  .mode-toggle .mode-label{ display:none; }
+  .mode-toggle{ padding:7px 10px; }
+  .intro{ padding-top:24px; }
+  .intro h1{ font-size: clamp(40px, 12vw, 124px); }
+  .intro .blurb{ font-size: clamp(17px, 4.5vw, 28px); }
+}
+@media (max-width: 380px){
+  .intro h1{ font-size: clamp(34px, 13vw, 124px); }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topleft">
+    <a href="../" class="wordmark"><svg class="bolt" viewBox="0 0 14 18" fill="currentColor"><polygon points="8,0 0,11 5,11 4,18 14,6 8,6"/></svg>← Anant Tyagi</a>
+    <a href="../" class="backlink">← back to portfolio</a>
+  </div>
+  <div class="topright">
+    <span class="here">Page 02 · Neural Net</span>
+    <button class="mode-toggle" id="mode-toggle" aria-label="Toggle color mode" type="button">
+      <span class="mode-icon">☀</span><span class="mode-label">LIGHT</span>
+    </button>
+    <span class="pill" id="versionToggle">v3 · live →</span>
+  </div>
+</div>
+
+<section class="intro" data-screen-label="01 Intro">
+  <div>
+    <div class="ek">★ Three views of one brain</div>
+    <h1>
+      <span>Same </span><span class="serif">net,</span><br>
+      <span class="blue">three</span> <span>ways</span><br>
+      <span>to </span><span class="red">read it.</span>
+    </h1>
+  </div>
+  <div>
+    <p class="blurb">
+      A messy index of the things I keep returning to.
+    </p>
+    <div class="stats">
+      <span><b>8</b> clusters</span>
+      <span><b>43</b> nodes</span>
+      <span><b class="red">6</b> cross-wires</span>
+      <span><b>17</b> still learning</span>
+    </div>
+  </div>
+</section>
+
+<div class="modebar">
+  <div class="group">
+    <span class="label">Layout</span>
+    <div class="modes" id="modes">
+      <span class="m on" data-mode="constellation">Constellation <span class="gloss">the editorial cut</span></span>
+      <span class="m" data-mode="graph">Graph <span class="gloss">the way it actually thinks</span></span>
+      <span class="m" data-mode="orbit">Orbit <span class="gloss">three dimensions, when the page cooperates</span></span>
+    </div>
+  </div>
+  <div class="legend">
+    <span><span class="dot eigen"></span>Eigen</span>
+    <span><span class="dot solid"></span>Comfortable</span>
+    <span><span class="dot hollow"></span>Still learning</span>
+    <span><span class="dash"></span>Cross-wire</span>
+    <span style="color:var(--ink)">Hover · Drag (graph) · Esc</span>
+  </div>
+</div>
+
+<section class="stage mode-constellation" id="stage" data-screen-label="02 Map">
+  <div class="stage-wrap">
+    <span class="axis tl">N · inward</span>
+    <span class="axis tr">N · outward</span>
+    <span class="axis bl">N · body</span>
+    <span class="axis br">N · world</span>
+
+    <div class="fig" id="fig">
+      <div class="small" id="fig-small">★ pick a node</div>
+      <div class="name" id="fig-name">The map</div>
+      <div class="of" id="fig-of"><b>fig.</b> of forty-something things</div>
+      <div class="voice" id="fig-voice">Hover any node. The wires are alive. Click to hold a thought.</div>
+      <div class="lev" id="fig-lev"><span class="pip"></span><span id="fig-lev-text">readout</span></div>
+    </div>
+
+    <svg class="netmap" id="netmap" viewBox="-700 -440 1400 880" preserveAspectRatio="xMidYMid meet">
+      <defs></defs>
+      <rect class="frame" x="-690" y="-430" width="1380" height="860"/>
+      <line class="crosshair" x1="-690" y1="0" x2="690" y2="0"/>
+      <line class="crosshair" x1="0" y1="-430" x2="0" y2="430"/>
+
+      <g id="parallax" class="parallax">
+        <g id="crosses-bg"></g>
+        <g id="clusters"></g>
+        <g id="crosses"></g>
+        <g id="pulses"></g>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<section class="mobile-stack">
+  <div id="ms-clusters"></div>
+  <div class="ms-wires">
+    <h3>Cross-wires</h3>
+    <ul id="ms-wires-list"></ul>
+  </div>
+</section>
+
+<section class="under">
+  <div class="left">
+    <h2>The <span class="serif">net</span> is the point.</h2>
+    <p>None of these are mine alone. Most of them are borrowed off people more patient than me. The map gets bigger every year. That's the part I like.</p>
+  </div>
+  <div class="right">
+    <a class="btn-block is-red" href="https://anantt.substack.com" target="_blank" rel="noopener">Read what I'm thinking →</a>
+    <a class="btn-block" href="../">← Back to the landing</a>
+  </div>
+</section>
+
+<footer>
+  <span>© 2026. A small page about a leaky brain.</span>
+  <div class="links">
+    <a href="mailto:hello@anant.tyagi">Email</a>
+    <a href="https://anantt.substack.com" target="_blank" rel="noopener">Letters</a>
+    <a href="#">X</a>
+    <a href="../">Landing</a>
+  </div>
+</footer>
+
+<div class="tweaks" id="tweaks">
+  <h4>Tweaks <span class="x" id="tweaksClose">close ✕</span></h4>
+  <div class="row">
+    <label>Layout</label>
+    <div class="seg" id="tw-mode">
+      <button data-mode="constellation" class="on">CONSTL.</button>
+      <button data-mode="graph">GRAPH</button>
+      <button data-mode="orbit">ORBIT</button>
+    </div>
+  </div>
+  <div class="row">
+    <label>Motion <span id="speedLbl">1.0×</span></label>
+    <input type="range" min="0" max="200" value="100" id="tw-speed">
+  </div>
+  <div class="row">
+    <label>Show all labels</label>
+    <div class="seg" id="tw-labels">
+      <button class="on" data-on="false">HOVER</button>
+      <button data-on="true">ALL</button>
+    </div>
+  </div>
+  <div class="row">
+    <label>Pulse density <span id="pulseLbl">6</span></label>
+    <input type="range" min="0" max="14" value="6" id="tw-pulse">
+  </div>
+</div>
+
+<script>
+/* ============ MODE TOGGLE (light/dark) ============ */
+(function(){
+  const tog = document.getElementById('mode-toggle');
+  function applyMode(m){
+    document.documentElement.dataset.mode = m;
+    localStorage.setItem('polymath-mode', m);
+    tog.querySelector('.mode-icon').textContent = m === 'dark' ? '☾' : '☀';
+    tog.querySelector('.mode-label').textContent = m.toUpperCase();
+  }
+  applyMode(localStorage.getItem('polymath-mode') || 'light');
+  tog.addEventListener('click', ()=>{
+    applyMode(document.documentElement.dataset.mode === 'dark' ? 'light' : 'dark');
+  });
+})();
+
+/* ============ DATA ============ */
+const DATA = {
+  clusters: [
+    { id:'WRITING', label:'WRITING', of:'on the page', x:-460, y:-260, num:'01',
+      voice:"Slow drafts, three rewrites, a lot of cutting. The page is the clearest mirror.",
+      subs:[
+        { id:'essays',         lvl:1, voice:"Slow drafts. Re-read three times before posting." },
+        { id:'screenwriting',  lvl:0, voice:"Three features deep. Still figuring out act two.", cross:'screenwriting' },
+        { id:'hinglish',       lvl:1, voice:"Half-Hindi, half-English. The half I needed for jokes." },
+        { id:'comedy writing', lvl:0, voice:"Beat the punch out of it. If it survives, it's funny." },
+        { id:'sales copy',     lvl:1, voice:"Six lines. The seventh kills it." },
+        { id:'voice',          lvl:1, voice:"The thing I won't outsource. Not even to a model.", cross:'voice' },
+        { id:'philosophy',     lvl:0, voice:"Stolen from the reading pile. The page is where I test it.", cross:'philosophy' }
+      ]},
+    { id:'READING', label:'READING', of:'every day', x:-60, y:-330, num:'05',
+      voice:"History first, fiction second, philosophy when I can sit with it.",
+      subs:[
+        { id:'history',     lvl:1, voice:"Athens vs Persia, Roman emperors, anything Persian." },
+        { id:'fiction',     lvl:1, voice:"Currently inside Dumas's Monte Cristo. Twelve years late." },
+        { id:'philosophy',  lvl:0, voice:"I read it slowly and twice. Once for the words.", cross:'philosophy' },
+        { id:'biographies', lvl:1, voice:"Everyone's a mess up close. Reassuring, mostly." },
+        { id:'re-reads',    lvl:1, voice:"The third pass is when the book starts talking back." }
+      ]},
+    { id:'BUILDING', label:'BUILDING', of:'consumer software', x:460, y:-260, num:'02',
+      voice:"Stealth-mode founder. Hard in ways I didn't expect, easier in ways I also didn't.",
+      subs:[
+        { id:'consumer apps',    lvl:0, voice:"My first one. Learning by colliding with reality." },
+        { id:'claude code',      lvl:0, voice:"Halfway between an assistant and a co-author." },
+        { id:'mcps',             lvl:0, voice:"Plumbing the model into everything else I run." },
+        { id:'web prototypes',   lvl:1, voice:"This page is one. The orrery's another." },
+        { id:'design systems',   lvl:0, voice:"Tokens, scales, vibes. Mostly vibes." },
+        { id:'automations',      lvl:1, voice:"Quiet little scripts that do the boring 30%." },
+        { id:'discipline',       lvl:1, voice:"Same muscle as the gym. Show up on the bad days.", cross:'discipline' }
+      ]},
+    { id:'SELLING', label:'SELLING', of:'high-trust deals', x:520, y:80, num:'03',
+      voice:"My day job. Lead partnerships at MAF. Apps, games, platforms.",
+      subs:[
+        { id:'high-ticket tech',     lvl:1, voice:"Six-figure rooms, twelve-month cycles. Patience pays." },
+        { id:'publisher partnerships', lvl:1, voice:"Books, IP, tech bridges. Mostly translation." },
+        { id:'cold outreach',        lvl:1, voice:"Six lines, no fluff, a hook on line two." },
+        { id:'pipedrive',            lvl:1, voice:"Pipeline hygiene. Boring. Wins quietly." },
+        { id:'long-cycle reads',     lvl:1, voice:"The deal isn't dead. It's just being polite." },
+        { id:'trust-first',          lvl:1, voice:"Closes happen in the third meeting, not the first.", cross:'trust' }
+      ]},
+    { id:'PERFORMING', label:'PERFORMING', of:'in front of people', x:420, y:300, num:'04',
+      voice:"Stand-up, IG comedy, decks at clubs. Nights are the best classroom.",
+      subs:[
+        { id:'stand-up',         lvl:0, voice:"Two years in. Eat a lot of silence. Earn a few laughs." },
+        { id:'ig comedy',        lvl:0, voice:"Vertical, fast, ruthless. The best editor in the world." },
+        { id:'dj-ing',           lvl:1, voice:"Three-hour sets. Can read a room before the third song." },
+        { id:'dance',            lvl:0, voice:"Bombay loosens the body. Slowly." },
+        { id:'public speaking',  lvl:1, voice:"Sales taught me this. Not the other way round." },
+        { id:'hosting',          lvl:1, voice:"Dinner parties. Brunches. Six-person tables, max." },
+        { id:'voice',            lvl:1, voice:"Same voice, different room. Different rules.", cross:'voice' },
+        { id:'trust',            lvl:1, voice:"A mic is also a sales call. Whoever goes first wins.", cross:'trust' }
+      ]},
+    { id:'DIRECTING', label:'DIRECTING', of:'on set, allegedly', x:-300, y:80, num:'06',
+      voice:"Three features and two shows in development. Still mostly co-writing and learning.",
+      subs:[
+        { id:'story-breaking', lvl:0, voice:"Whiteboards, index cards, a lot of pacing." },
+        { id:'co-writing',     lvl:1, voice:"Two heads in a room beat one head with two coffees." },
+        { id:'pitching',       lvl:0, voice:"Two minutes to make someone want to pay for ninety." },
+        { id:'production',     lvl:0, voice:"All the unsexy parts. Where the film actually gets made." },
+        { id:'screenwriting',  lvl:0, voice:"Different beast from prose. Form first, feeling later.", cross:'screenwriting' },
+        { id:'framing',        lvl:1, voice:"What's in the box, what's outside it. The whole game.", cross:'framing' }
+      ]},
+    { id:'CAPTURING', label:'CAPTURING', of:'with a camera', x:-450, y:280, num:'07',
+      voice:"I shoot for myself and a few people I love. Mostly a study of what light does.",
+      subs:[
+        { id:'portraits',  lvl:1, voice:"Faces beat scenery. Eyes do the work." },
+        { id:'framing',    lvl:1, voice:"Decide what's in. Decide what's out. Done.", cross:'framing' },
+        { id:'light',      lvl:0, voice:"Still mostly grateful when it shows up well." },
+        { id:'composition',lvl:1, voice:"Thirds, leading lines, breathing room. Old rules, still good." },
+        { id:'color',      lvl:0, voice:"The hardest one. Bombay teaches it the loudest." }
+      ]},
+    { id:'BODY', label:'BODY', of:'eight years and counting', x:80, y:340, num:'08',
+      voice:"Push, pull, legs, repeat. Skipped weeks show up everywhere else first.",
+      subs:[
+        { id:'push/pull/legs', lvl:1, voice:"Four to five sessions a week. The grammar holds." },
+        { id:'zone-2',         lvl:0, voice:"Boring on purpose. The point is the boredom." },
+        { id:'mobility',       lvl:0, voice:"Started taking it seriously around 30. Should've at 20." },
+        { id:'sleep',          lvl:0, voice:"Eight hours, dark room, no phone. I'm bad at it." },
+        { id:'deload',         lvl:0, voice:"The hardest discipline is doing less, on purpose." },
+        { id:'8-year streak',  lvl:1, voice:"Started 2018. Hasn't stopped. The longest thing I run." },
+        { id:'discipline',     lvl:1, voice:"Show up on the day you don't feel like it.", cross:'discipline' }
+      ]}
+  ],
+  crosses: [
+    { id:'voice',         a:'WRITING',    b:'PERFORMING', label:'voice' },
+    { id:'screenwriting', a:'WRITING',    b:'DIRECTING',  label:'screenwriting' },
+    { id:'philosophy',    a:'READING',    b:'WRITING',    label:'philosophy' },
+    { id:'discipline',    a:'BODY',       b:'BUILDING',   label:'discipline' },
+    { id:'framing',       a:'CAPTURING',  b:'DIRECTING',  label:'framing' },
+    { id:'trust',         a:'SELLING',    b:'PERFORMING', label:'trust-first' }
+  ]
+};
+
+/* helpers */
+const $ = (s,r=document)=> r.querySelector(s);
+const $$ = (s,r=document)=> [...r.querySelectorAll(s)];
+const SVGNS = 'http://www.w3.org/2000/svg';
+function ns(tag, attrs={}, kids){
+  const el = document.createElementNS(SVGNS, tag);
+  for(const k in attrs) el.setAttribute(k, attrs[k]);
+  if(kids){ if(Array.isArray(kids)) kids.forEach(c=>el.appendChild(c)); else el.appendChild(kids); }
+  return el;
+}
+function txt(t){ return document.createTextNode(t); }
+function escapeHtml(s){ return s.replace(/[&<>"]/g, c=> ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':'&quot;'}[c])); }
+
+/* ============ STATE ============ */
+const STATE = {
+  mode: 'constellation',
+  speed: 1.0,
+  showAllLabels: false,
+  pulseDensity: 6,
+  locked: null,
+  rotY: 0,
+  parallax: { x:0, y:0 }
+};
+
+/* index nodes for graph + orbit */
+let NODES = [];
+let EDGES = [];
+function buildIndex(){
+  NODES = []; EDGES = [];
+  DATA.clusters.forEach(c => {
+    NODES.push({ key:'C/'+c.id, kind:'eigen', cluster:c, x:c.x, y:c.y, vx:0, vy:0, mass:3 });
+    c.subs.forEach(s => {
+      NODES.push({ key:'S/'+c.id+'/'+s.id, kind:'sub', cluster:c, sub:s, x:c.x+(Math.random()-.5)*100, y:c.y+(Math.random()-.5)*100, vx:0, vy:0, mass:1 });
+      EDGES.push({ a:'C/'+c.id, b:'S/'+c.id+'/'+s.id, kind:'spoke' });
+    });
+  });
+  DATA.crosses.forEach(cr => {
+    const aSub = DATA.clusters.find(c=>c.id===cr.a)?.subs.find(s=> s.id===cr.id || s.cross===cr.id);
+    const bSub = DATA.clusters.find(c=>c.id===cr.b)?.subs.find(s=> s.id===cr.id || s.cross===cr.id);
+    if(!aSub || !bSub) return;
+    EDGES.push({ a:'S/'+cr.a+'/'+aSub.id, b:'S/'+cr.b+'/'+bSub.id, kind:'cross', crossId:cr.id });
+  });
+}
+buildIndex();
+function nodeByKey(k){ return NODES.find(n=>n.key===k); }
+
+/* ============ DOM REFS ============ */
+const stage = $('#stage');
+const map = $('#netmap');
+const clustersG = $('#clusters');
+const crossesG = $('#crosses');
+const crossesBg = $('#crosses-bg');
+const pulsesG = $('#pulses');
+const parallax = $('#parallax');
+
+/* fig card */
+const fig = $('#fig');
+const figName = $('#fig-name');
+const figVoice= $('#fig-voice');
+const figOf   = $('#fig-of');
+const figSmall= $('#fig-small');
+const figLev  = $('#fig-lev');
+const figLevTx= $('#fig-lev-text');
+function setFigEmpty(){
+  fig.classList.remove('locked');
+  figSmall.textContent = '★ pick a node';
+  figName.textContent = 'The map';
+  figOf.innerHTML = '<b>fig.</b> of forty-something things';
+  figVoice.textContent = 'Hover any node. The wires are alive. Click to hold a thought.';
+  figLev.style.opacity = 0;
+}
+function setFigSub(c, s){
+  figSmall.innerHTML = `★ ${c.label.toLowerCase()} · sub-skill`;
+  figName.textContent = s.id;
+  figOf.innerHTML = `<b>under</b> ${c.label.toLowerCase()}`;
+  figVoice.textContent = s.voice;
+  figLev.style.opacity = 1;
+  figLev.querySelector('.pip').className = 'pip' + (s.lvl===1 ? ' solid' : '');
+  figLevTx.textContent = s.lvl===1 ? 'comfortable' : 'still learning';
+}
+function setFigCluster(c){
+  figSmall.innerHTML = `★ eigen-skill · n° ${c.num}`;
+  figName.textContent = c.label;
+  figOf.innerHTML = `<b>of</b> ${c.of}`;
+  figVoice.textContent = c.voice;
+  figLev.style.opacity = 1;
+  figLev.querySelector('.pip').className = 'pip solid';
+  figLevTx.textContent = `${c.subs.length} sub-skills · cluster`;
+}
+function setFigCross(cr){
+  figSmall.innerHTML = '★ cross-wire';
+  figName.textContent = cr.label;
+  figOf.innerHTML = `<b>between</b> ${cr.a.toLowerCase()} ↔ ${cr.b.toLowerCase()}`;
+  figVoice.textContent = `Same skill, two clusters. ${cr.label} shows up in ${cr.a.toLowerCase()} and ${cr.b.toLowerCase()}. It's the wire, not the node.`;
+  figLev.style.opacity = 1;
+  figLev.querySelector('.pip').className = 'pip';
+  figLevTx.textContent = 'cross-wire';
+}
+
+/* ============ RENDER ============ */
+function layoutConstellation(){
+  DATA.clusters.forEach(c => {
+    const en = nodeByKey('C/'+c.id);
+    en.x = c.x; en.y = c.y;
+    const len = c.subs.length;
+    const inward = Math.atan2(-c.y, -c.x);
+    const spread = Math.PI * (len <= 5 ? 0.95 : 1.1);
+    const start = inward - spread/2;
+    const dist = Math.hypot(c.x, c.y);
+    const baseR = Math.max(125, Math.min(180, 100 + dist * 0.18));
+    c.subs.forEach((s, i) => {
+      const t = len === 1 ? 0.5 : i/(len-1);
+      const a = start + t*spread;
+      const r = baseR + ((i*37) % 22) - 11;
+      const sn = nodeByKey('S/'+c.id+'/'+s.id);
+      sn.x = c.x + Math.cos(a)*r;
+      sn.y = c.y + Math.sin(a)*r;
+      sn._a = a;
+      sn._r = r;
+    });
+  });
+}
+
+function layoutOrbit(){
+  const R = 480;
+  const len = DATA.clusters.length;
+  DATA.clusters.forEach((c, i) => {
+    const theta = (i/len) * Math.PI * 2;
+    const en = nodeByKey('C/'+c.id);
+    en._theta = theta;
+    en._radius = R;
+    en._yLocal = 0;
+    const subLen = c.subs.length;
+    const subR = 100;
+    c.subs.forEach((s, j) => {
+      const phi = (j/subLen) * Math.PI * 2;
+      const sn = nodeByKey('S/'+c.id+'/'+s.id);
+      sn._theta = theta;
+      sn._phi = phi;
+      sn._radius = R;
+      sn._subR = subR;
+      sn._subY = Math.sin(phi) * 60;
+      sn._subZ = Math.cos(phi) * subR;
+    });
+  });
+}
+
+let GRAPH_ALIVE = false;
+function layoutGraph(){
+  layoutConstellation();
+  GRAPH_ALIVE = true;
+}
+
+/* ============ DRAW ============ */
+function clearMap(){
+  clustersG.innerHTML = '';
+  crossesG.innerHTML = '';
+  crossesBg.innerHTML = '';
+  pulsesG.innerHTML = '';
+}
+
+function smoothPath(P){
+  if(P.length < 2) return '';
+  let d = `M ${P[0][0].toFixed(1)},${P[0][1].toFixed(1)}`;
+  for(let i=1;i<P.length;i++){
+    const prev = P[i-1], curr = P[i];
+    const mx = (prev[0]+curr[0])/2, my = (prev[1]+curr[1])/2;
+    const cx1 = (prev[0]+mx)/2, cy1 = (prev[1]+my)/2;
+    d += ` Q ${cx1.toFixed(1)},${cy1.toFixed(1)} ${mx.toFixed(1)},${my.toFixed(1)} T ${curr[0].toFixed(1)},${curr[1].toFixed(1)}`;
+  }
+  return d;
+}
+
+function projectOrbit(node, t){
+  const tilt = 0.55;
+  const ringR = 460;
+  const subR = 100;
+  const a = node.cluster ? (node._theta + STATE.rotY) : 0;
+  let X, Y, Z;
+  if(node.kind === 'eigen'){
+    X = Math.cos(a) * ringR;
+    Z = Math.sin(a) * ringR;
+    Y = 0;
+  } else {
+    const ex = Math.cos(a) * ringR, ez = Math.sin(a) * ringR;
+    const phi = node._phi + t * 0.5;
+    const localY = Math.sin(phi) * 50;
+    const localT = Math.cos(phi) * subR;
+    X = ex + (-Math.sin(a)) * localT;
+    Z = ez + ( Math.cos(a)) * localT;
+    Y = localY;
+  }
+  const ry = Y * Math.cos(tilt) - Z * Math.sin(tilt);
+  const rz = Y * Math.sin(tilt) + Z * Math.cos(tilt);
+  return { x: X, y: ry, depth: rz };
+}
+
+function render(){
+  clearMap();
+  stage.classList.remove('mode-constellation','mode-graph','mode-orbit');
+  stage.classList.add('mode-' + STATE.mode);
+
+  if(STATE.mode === 'constellation'){
+    layoutConstellation();
+    GRAPH_ALIVE = false;
+    drawStatic();
+  } else if(STATE.mode === 'graph'){
+    layoutGraph();
+    drawStatic();
+  } else if(STATE.mode === 'orbit'){
+    layoutOrbit();
+    GRAPH_ALIVE = false;
+    drawOrbit(0);
+  }
+
+  if(STATE.showAllLabels) map.classList.add('show-all'); else map.classList.remove('show-all');
+
+  rebuildPulses();
+}
+
+function drawStatic(){
+  DATA.clusters.forEach((c) => {
+    const en = nodeByKey('C/'+c.id);
+    const g = ns('g', { class:'cluster', 'data-cluster':c.id });
+
+    if(STATE.mode === 'constellation'){
+      const pts = c.subs.map(s => {
+        const n = nodeByKey('S/'+c.id+'/'+s.id);
+        return [n.x, n.y];
+      });
+      g.appendChild(ns('path', { class:'orbit', d: smoothPath(pts) }));
+    }
+
+    c.subs.forEach((s) => {
+      const n = nodeByKey('S/'+c.id+'/'+s.id);
+      const ln = ns('line', { class:'spoke', x1:en.x, y1:en.y, x2:n.x, y2:n.y });
+      ln.dataset.from = en.key; ln.dataset.to = n.key;
+      g.appendChild(ln);
+    });
+
+    g.appendChild(ns('circle', { class:'eigen-pulse', cx:en.x, cy:en.y, r:8 }));
+    g.appendChild(ns('circle', { class:'eigen-ring',   cx:en.x, cy:en.y, r:24 }));
+    g.appendChild(ns('circle', { class:'eigen-ring-2', cx:en.x, cy:en.y, r:16 }));
+    g.appendChild(ns('circle', { class:'eigen-core',   cx:en.x, cy:en.y, r:6 }));
+
+    const labelAbove = c.y > 0 ? false : true;
+    const ly = labelAbove ? en.y - 36 : en.y + 44;
+    const t1 = ns('text', { class:'eigen-label', x:en.x, y:ly, 'text-anchor':'middle' }); t1.appendChild(txt(c.label));
+    const t2 = ns('text', { class:'eigen-num', x:en.x, y: labelAbove ? ly-14 : ly+14, 'text-anchor':'middle' }); t2.appendChild(txt('N° '+c.num));
+    g.appendChild(t1); g.appendChild(t2);
+    en._labelEl = t1; en._numEl = t2;
+
+    c.subs.forEach((s, i) => {
+      const n = nodeByKey('S/'+c.id+'/'+s.id);
+      const sg = ns('g', { class:'sub-grp', 'data-sub':s.id, 'data-cluster':c.id, 'data-cross': s.cross || '' });
+      const dot = ns('circle', { class:'sub' + (s.lvl===0 ? ' hollow' : ''), cx:n.x, cy:n.y, r:5 });
+      sg.appendChild(dot);
+
+      const dx = n.x - en.x, dy = n.y - en.y;
+      const dn = Math.hypot(dx,dy) || 1;
+      const lx = n.x + (dx/dn) * 12, ly2 = n.y + (dy/dn) * 12 + 3;
+      const anchor = dx > 8 ? 'start' : dx < -8 ? 'end' : 'middle';
+      const lbl = ns('text', { class:'sub-label', x:lx, y:ly2, 'text-anchor':anchor, style:`--fx:${(-dx/dn*8).toFixed(1)}px; --fy:${(-dy/dn*8).toFixed(1)}px; animation-delay:${i*0.03}s` });
+      lbl.appendChild(txt(s.id));
+      sg.appendChild(lbl);
+
+      sg.appendChild(ns('circle', { class:'hit', cx:n.x, cy:n.y, r:STATE.mode==='graph'?14:18 }));
+      g.appendChild(sg);
+      n._dotEl = dot; n._labelEl = lbl;
+    });
+
+    g.appendChild(ns('circle', { class:'hit', 'data-eigen-hit':c.id, cx:en.x, cy:en.y, r:30 }));
+
+    clustersG.appendChild(g);
+    c._g = g;
+  });
+
+  DATA.crosses.forEach((cr, i) => {
+    const aN = NODES.find(n => n.kind==='sub' && n.cluster.id===cr.a && (n.sub.id===cr.id || n.sub.cross===cr.id));
+    const bN = NODES.find(n => n.kind==='sub' && n.cluster.id===cr.b && (n.sub.id===cr.id || n.sub.cross===cr.id));
+    if(!aN || !bN) return;
+    const x1=aN.x, y1=aN.y, x2=bN.x, y2=bN.y;
+    const mx=(x1+x2)/2, my=(y1+y2)/2;
+    const ex=y2-y1, ey=x1-x2; const en=Math.hypot(ex,ey)||1;
+    const dist=Math.hypot(x2-x1,y2-y1);
+    const off=Math.min(80, dist*0.18);
+    const sign=(i%2===0)?1:-1;
+    const cpx=mx+(ex/en)*off*sign, cpy=my+(ey/en)*off*sign;
+    const d=`M ${x1.toFixed(1)},${y1.toFixed(1)} Q ${cpx.toFixed(1)},${cpy.toFixed(1)} ${x2.toFixed(1)},${y2.toFixed(1)}`;
+    const path = ns('path', { class:'cross', d, 'data-cross':cr.id });
+    path._a = aN.key; path._b = bN.key; path._sign = sign;
+    crossesG.appendChild(path);
+    cr._path = path; cr._aN = aN; cr._bN = bN; cr._sign = sign;
+
+    const lx = 0.25*x1 + 0.5*cpx + 0.25*x2;
+    const ly = 0.25*y1 + 0.5*cpy + 0.25*y2;
+    const labelText='↺ '+cr.label;
+    const w=labelText.length*5.2+12, h=14;
+    const bg = ns('rect', { class:'cross-bg', x:(lx-w/2).toFixed(1), y:(ly-h/2).toFixed(1), width:w.toFixed(1), height:h.toFixed(1), rx:7 });
+    crossesG.appendChild(bg);
+    const t = ns('text', { class:'cross-label', x:lx.toFixed(1), y:(ly+3).toFixed(1), 'text-anchor':'middle', 'data-cross':cr.id });
+    t.appendChild(txt(labelText));
+    crossesG.appendChild(t);
+    cr._bg = bg; cr._label = t;
+  });
+
+  wireInteractions();
+}
+
+function drawOrbit(t){
+  if(!clustersG.children.length){
+    DATA.clusters.forEach((c) => {
+      const g = ns('g', { class:'cluster', 'data-cluster':c.id });
+      c.subs.forEach((s) => {
+        const ln = ns('line', { class:'spoke' });
+        g.appendChild(ln);
+      });
+      const pulse = ns('circle', { class:'eigen-pulse', r:8 });
+      const ring = ns('circle', { class:'eigen-ring', r:18 });
+      const core = ns('circle', { class:'eigen-core', r:7 });
+      g.appendChild(pulse); g.appendChild(ring); g.appendChild(core);
+
+      const lbl = ns('text', { class:'eigen-label', 'text-anchor':'middle' }); lbl.appendChild(txt(c.label));
+      const num = ns('text', { class:'eigen-num', 'text-anchor':'middle' }); num.appendChild(txt('N° '+c.num));
+      g.appendChild(lbl); g.appendChild(num);
+
+      c.subs.forEach((s) => {
+        const sg = ns('g', { class:'sub-grp', 'data-sub':s.id, 'data-cluster':c.id, 'data-cross': s.cross || '' });
+        const dot = ns('circle', { class:'sub' + (s.lvl===0?' hollow':''), r:4 });
+        const slbl = ns('text', { class:'sub-label', 'text-anchor':'start' }); slbl.appendChild(txt(s.id));
+        const hit = ns('circle', { class:'hit', r:14 });
+        sg.appendChild(dot); sg.appendChild(slbl); sg.appendChild(hit);
+        g.appendChild(sg);
+      });
+
+      g.appendChild(ns('circle', { class:'hit', 'data-eigen-hit':c.id, r:24 }));
+      clustersG.appendChild(g);
+      c._g = g;
+    });
+
+    DATA.crosses.forEach((cr) => {
+      const path = ns('path', { class:'cross', 'data-cross':cr.id });
+      crossesG.appendChild(path);
+      cr._path = path;
+      const bg = ns('rect', { class:'cross-bg', rx:7 });
+      const tx = ns('text', { class:'cross-label', 'text-anchor':'middle', 'data-cross':cr.id });
+      tx.appendChild(txt('↺ '+cr.label));
+      crossesG.appendChild(bg); crossesG.appendChild(tx);
+      cr._bg = bg; cr._label = tx;
+    });
+
+    wireInteractions();
+  }
+
+  const proj = {};
+  NODES.forEach(n => { proj[n.key] = projectOrbit(n, t); });
+
+  DATA.clusters.forEach(c => {
+    const en = proj['C/'+c.id];
+    const eigenG = c._g;
+    const childN = eigenG.children;
+    let idx = 0;
+    c.subs.forEach((s) => {
+      const sp = childN[idx++];
+      const sn = proj['S/'+c.id+'/'+s.id];
+      sp.setAttribute('x1', en.x); sp.setAttribute('y1', en.y);
+      sp.setAttribute('x2', sn.x); sp.setAttribute('y2', sn.y);
+      const opA = (en.depth + 200) / 400; const opB = (sn.depth + 200) / 400;
+      sp.style.opacity = Math.max(0.08, Math.min(0.6, (opA+opB)/2 * 0.8));
+    });
+    const pulse = childN[idx++], ring = childN[idx++], core = childN[idx++], lbl = childN[idx++], num = childN[idx++];
+    pulse.setAttribute('cx', en.x); pulse.setAttribute('cy', en.y);
+    ring.setAttribute('cx', en.x); ring.setAttribute('cy', en.y);
+    core.setAttribute('cx', en.x); core.setAttribute('cy', en.y);
+    const eDepth = (en.depth + 250) / 500;
+    core.setAttribute('r', (5 + eDepth * 3).toFixed(1));
+    lbl.setAttribute('x', en.x); lbl.setAttribute('y', en.y - 28);
+    lbl.style.fontSize = (14 + eDepth*8).toFixed(1) + 'px';
+    lbl.style.opacity = Math.max(0.3, eDepth);
+    num.setAttribute('x', en.x); num.setAttribute('y', en.y - 42);
+    num.style.opacity = Math.max(0.3, eDepth);
+
+    c.subs.forEach((s) => {
+      const sg = childN[idx++];
+      const sn = proj['S/'+c.id+'/'+s.id];
+      const dot = sg.children[0], slbl = sg.children[1], hit = sg.children[2];
+      dot.setAttribute('cx', sn.x); dot.setAttribute('cy', sn.y);
+      hit.setAttribute('cx', sn.x); hit.setAttribute('cy', sn.y);
+      slbl.setAttribute('x', sn.x + 8); slbl.setAttribute('y', sn.y + 3);
+      const sDepth = (sn.depth + 250) / 500;
+      dot.setAttribute('r', (3 + sDepth * 3).toFixed(1));
+      slbl.style.opacity = Math.max(0, sDepth - 0.2);
+    });
+    const hit = childN[idx++];
+    hit.setAttribute('cx', en.x); hit.setAttribute('cy', en.y);
+  });
+
+  const byDepth = DATA.clusters.slice().sort((a,b)=>{
+    const da = projectOrbit(nodeByKey('C/'+a.id), t).depth;
+    const db = projectOrbit(nodeByKey('C/'+b.id), t).depth;
+    return da - db;
+  });
+  byDepth.forEach(c => clustersG.appendChild(c._g));
+
+  DATA.crosses.forEach((cr, i) => {
+    const aN = NODES.find(n => n.kind==='sub' && n.cluster.id===cr.a && (n.sub.id===cr.id || n.sub.cross===cr.id));
+    const bN = NODES.find(n => n.kind==='sub' && n.cluster.id===cr.b && (n.sub.id===cr.id || n.sub.cross===cr.id));
+    if(!aN || !bN) return;
+    const a = proj[aN.key], b = proj[bN.key];
+    const mx = (a.x+b.x)/2;
+    const my = (a.y+b.y)/2 - 80;
+    const d = `M ${a.x.toFixed(1)},${a.y.toFixed(1)} Q ${mx.toFixed(1)},${my.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
+    cr._path.setAttribute('d', d);
+    const lx = 0.25*a.x + 0.5*mx + 0.25*b.x;
+    const ly = 0.25*a.y + 0.5*my + 0.25*b.y;
+    cr._label.setAttribute('x', lx); cr._label.setAttribute('y', ly+3);
+    const lblText = '↺ ' + cr.label;
+    const w = lblText.length*5.2+12;
+    cr._bg.setAttribute('x', (lx - w/2).toFixed(1));
+    cr._bg.setAttribute('y', (ly - 7).toFixed(1));
+    cr._bg.setAttribute('width', w.toFixed(1));
+    cr._bg.setAttribute('height', 14);
+    cr._aN = aN; cr._bN = bN; cr._sign = (i%2===0)?1:-1;
+  });
+}
+
+/* ============ INTERACTIONS ============ */
+function clearAll(){
+  map.classList.remove('has-active','has-cross');
+  $$('.cluster.active', map).forEach(g=> g.classList.remove('active'));
+  $$('.cluster.cross-end', map).forEach(g=> g.classList.remove('cross-end'));
+  $$('.cross.active', map).forEach(p=> p.classList.remove('active'));
+  $$('.cross-label.active', map).forEach(t=> t.classList.remove('active'));
+}
+function highlightCluster(id){
+  clearAll();
+  map.classList.add('has-active');
+  const g = map.querySelector(`.cluster[data-cluster="${id}"]`);
+  if(g) g.classList.add('active');
+}
+function highlightCross(id){
+  clearAll();
+  map.classList.add('has-cross');
+  const cr = DATA.crosses.find(c => c.id === id);
+  if(!cr) return;
+  $$(`.cluster[data-cluster="${cr.a}"], .cluster[data-cluster="${cr.b}"]`, map).forEach(g=> g.classList.add('cross-end'));
+  $$(`.cross[data-cross="${id}"], .cross-label[data-cross="${id}"]`, map).forEach(el=> el.classList.add('active'));
+}
+
+function wireInteractions(){
+  $$('.sub-grp', map).forEach(sg => {
+    const cId = sg.dataset.cluster, sId = sg.dataset.sub, xId = sg.dataset.cross;
+    sg.addEventListener('mouseenter', () => {
+      if(STATE.locked) return;
+      const c = DATA.clusters.find(c=>c.id===cId);
+      const s = c.subs.find(s=>s.id===sId);
+      if(xId){ highlightCross(xId); setFigCross(DATA.crosses.find(c=>c.id===xId)); }
+      else { highlightCluster(cId); setFigSub(c, s); }
+    });
+    sg.addEventListener('mouseleave', () => { if(!STATE.locked){ clearAll(); setFigEmpty(); } });
+    sg.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const key = (xId ? 'X/'+xId : 'S/'+cId+'/'+sId);
+      if(STATE.locked === key){ STATE.locked = null; fig.classList.remove('locked'); clearAll(); setFigEmpty(); return; }
+      STATE.locked = key;
+      if(xId){ highlightCross(xId); setFigCross(DATA.crosses.find(c=>c.id===xId)); }
+      else {
+        const c = DATA.clusters.find(c=>c.id===cId), s = c.subs.find(s=>s.id===sId);
+        highlightCluster(cId); setFigSub(c, s);
+      }
+      fig.classList.add('locked');
+    });
+  });
+  $$('[data-eigen-hit]', map).forEach(hit => {
+    const cId = hit.dataset.eigenHit;
+    hit.addEventListener('mouseenter', () => { if(!STATE.locked){ highlightCluster(cId); setFigCluster(DATA.clusters.find(c=>c.id===cId)); } });
+    hit.addEventListener('mouseleave', () => { if(!STATE.locked){ clearAll(); setFigEmpty(); } });
+    hit.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const key = 'C/'+cId;
+      if(STATE.locked === key){ STATE.locked = null; fig.classList.remove('locked'); clearAll(); setFigEmpty(); return; }
+      STATE.locked = key;
+      highlightCluster(cId); setFigCluster(DATA.clusters.find(c=>c.id===cId));
+      fig.classList.add('locked');
+    });
+  });
+  $$('.cross', map).forEach(p => {
+    const xId = p.dataset.cross;
+    p.addEventListener('mouseenter', () => { if(!STATE.locked){ highlightCross(xId); setFigCross(DATA.crosses.find(c=>c.id===xId)); } });
+    p.addEventListener('mouseleave', () => { if(!STATE.locked){ clearAll(); setFigEmpty(); } });
+    p.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const key = 'X/'+xId;
+      if(STATE.locked === key){ STATE.locked = null; fig.classList.remove('locked'); clearAll(); setFigEmpty(); return; }
+      STATE.locked = key;
+      highlightCross(xId); setFigCross(DATA.crosses.find(c=>c.id===xId));
+      fig.classList.add('locked');
+    });
+  });
+}
+
+map.addEventListener('click', (e) => {
+  if(e.target === map || e.target.tagName === 'svg' || e.target.classList.contains('frame') || e.target.classList.contains('crosshair')){
+    STATE.locked = null; fig.classList.remove('locked'); clearAll(); setFigEmpty();
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape'){ STATE.locked = null; fig.classList.remove('locked'); clearAll(); setFigEmpty(); }
+});
+
+/* ============ MOUSE PARALLAX (constellation) ============ */
+const stageWrap = $('.stage-wrap');
+let parallaxTarget = { x:0, y:0 };
+stageWrap.addEventListener('pointermove', (e) => {
+  const rect = stageWrap.getBoundingClientRect();
+  const nx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+  const ny = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+  parallaxTarget.x = -nx * 14;
+  parallaxTarget.y = -ny * 8;
+});
+stageWrap.addEventListener('pointerleave', () => { parallaxTarget.x = 0; parallaxTarget.y = 0; });
+
+/* ============ GRAPH FORCE SIM ============ */
+function stepGraph(dt){
+  const REP = 5500, SPRING = 0.012, REST_SPOKE = 110, REST_CROSS = 240, GRAV = 0.012, DAMP = 0.86;
+
+  for(let i=0;i<NODES.length;i++){
+    const a = NODES[i];
+    if(a._pinned) continue;
+    let fx = 0, fy = 0;
+    for(let j=0;j<NODES.length;j++){
+      if(i===j) continue;
+      const b = NODES[j];
+      const dx = a.x - b.x, dy = a.y - b.y;
+      const d2 = dx*dx + dy*dy + 0.01;
+      const f = REP / d2;
+      const d = Math.sqrt(d2);
+      fx += (dx/d) * f;
+      fy += (dy/d) * f;
+    }
+    fx += -a.x * GRAV;
+    fy += -a.y * GRAV;
+    a._fx = fx; a._fy = fy;
+  }
+  EDGES.forEach(e => {
+    const a = nodeByKey(e.a), b = nodeByKey(e.b);
+    if(!a||!b) return;
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const d = Math.hypot(dx,dy) + 0.01;
+    const rest = e.kind === 'cross' ? REST_CROSS : REST_SPOKE;
+    const f = SPRING * (d - rest);
+    const fxs = (dx/d) * f, fys = (dy/d) * f;
+    if(!a._pinned){ a._fx += fxs; a._fy += fys; }
+    if(!b._pinned){ b._fx -= fxs; b._fy -= fys; }
+  });
+  NODES.forEach(n => {
+    if(n._pinned){ n.vx = n.vy = 0; return; }
+    n.vx = (n.vx + (n._fx||0) * dt) * DAMP;
+    n.vy = (n.vy + (n._fy||0) * dt) * DAMP;
+    n.x += n.vx * dt;
+    n.y += n.vy * dt;
+    const M = 600;
+    if(n.x < -M) n.x = -M; if(n.x > M) n.x = M;
+    if(n.y < -380) n.y = -380; if(n.y > 380) n.y = 380;
+  });
+}
+
+function paintGraph(){
+  DATA.clusters.forEach(c => {
+    const en = nodeByKey('C/'+c.id);
+    const g = c._g;
+    if(!g) return;
+    const childN = g.children;
+    let idx = 0;
+    c.subs.forEach((s) => {
+      const sp = childN[idx++];
+      const sn = nodeByKey('S/'+c.id+'/'+s.id);
+      sp.setAttribute('x1', en.x); sp.setAttribute('y1', en.y);
+      sp.setAttribute('x2', sn.x); sp.setAttribute('y2', sn.y);
+    });
+    const pulse = childN[idx++], ring1 = childN[idx++], ring2 = childN[idx++], core = childN[idx++];
+    [pulse,ring1,ring2,core].forEach(el => { el.setAttribute('cx', en.x); el.setAttribute('cy', en.y); });
+    const lbl = childN[idx++], num = childN[idx++];
+    lbl.setAttribute('x', en.x); lbl.setAttribute('y', en.y - 30);
+    num.setAttribute('x', en.x); num.setAttribute('y', en.y - 44);
+
+    c.subs.forEach((s) => {
+      const sg = childN[idx++];
+      const sn = nodeByKey('S/'+c.id+'/'+s.id);
+      const dot = sg.children[0], slbl = sg.children[1], hit = sg.children[2];
+      dot.setAttribute('cx', sn.x); dot.setAttribute('cy', sn.y);
+      hit.setAttribute('cx', sn.x); hit.setAttribute('cy', sn.y);
+      const dx = sn.x - en.x, dy = sn.y - en.y; const dn = Math.hypot(dx,dy)||1;
+      slbl.setAttribute('x', sn.x + (dx/dn)*10); slbl.setAttribute('y', sn.y + (dy/dn)*10 + 3);
+      slbl.setAttribute('text-anchor', dx > 4 ? 'start' : dx < -4 ? 'end' : 'middle');
+    });
+    const hit = childN[idx++];
+    hit.setAttribute('cx', en.x); hit.setAttribute('cy', en.y);
+  });
+
+  DATA.crosses.forEach((cr, i) => {
+    const aN = NODES.find(n => n.kind==='sub' && n.cluster.id===cr.a && (n.sub.id===cr.id || n.sub.cross===cr.id));
+    const bN = NODES.find(n => n.kind==='sub' && n.cluster.id===cr.b && (n.sub.id===cr.id || n.sub.cross===cr.id));
+    if(!aN || !bN || !cr._path) return;
+    const x1=aN.x, y1=aN.y, x2=bN.x, y2=bN.y;
+    const mx=(x1+x2)/2, my=(y1+y2)/2;
+    const ex=y2-y1, ey=x1-x2; const en=Math.hypot(ex,ey)||1;
+    const dist=Math.hypot(x2-x1,y2-y1); const off=Math.min(80, dist*0.18);
+    const sign=(i%2===0)?1:-1;
+    const cpx=mx+(ex/en)*off*sign, cpy=my+(ey/en)*off*sign;
+    cr._path.setAttribute('d', `M ${x1.toFixed(1)},${y1.toFixed(1)} Q ${cpx.toFixed(1)},${cpy.toFixed(1)} ${x2.toFixed(1)},${y2.toFixed(1)}`);
+    const lx = 0.25*x1 + 0.5*cpx + 0.25*x2;
+    const ly = 0.25*y1 + 0.5*cpy + 0.25*y2;
+    cr._label.setAttribute('x', lx); cr._label.setAttribute('y', ly+3);
+    const lblText = '↺ ' + cr.label;
+    const w = lblText.length*5.2+12;
+    cr._bg.setAttribute('x', (lx-w/2).toFixed(1));
+    cr._bg.setAttribute('y', (ly-7).toFixed(1));
+    cr._bg.setAttribute('width', w.toFixed(1));
+    cr._bg.setAttribute('height', 14);
+  });
+}
+
+/* drag-to-reposition (graph) and drag-to-rotate (orbit) */
+let DRAG = null;
+map.addEventListener('pointerdown', (e) => {
+  if(STATE.mode !== 'graph') {
+    if(STATE.mode === 'orbit'){
+      DRAG = { type:'orbit', startX:e.clientX, startRot: STATE.rotY };
+      map.setPointerCapture?.(e.pointerId);
+    }
+    return;
+  }
+  const target = e.target.closest('.sub-grp, [data-eigen-hit]');
+  if(!target) return;
+  let key;
+  if(target.dataset.eigenHit) key = 'C/'+target.dataset.eigenHit;
+  else key = 'S/'+target.dataset.cluster+'/'+target.dataset.sub;
+  const n = nodeByKey(key);
+  if(!n) return;
+  DRAG = { type:'graph', node: n, pointerId: e.pointerId };
+  n._pinned = true;
+  map.setPointerCapture?.(e.pointerId);
+});
+map.addEventListener('pointermove', (e) => {
+  if(!DRAG) return;
+  if(DRAG.type === 'graph'){
+    const pt = svgPoint(e.clientX, e.clientY);
+    DRAG.node.x = pt.x; DRAG.node.y = pt.y;
+    DRAG.node.vx = DRAG.node.vy = 0;
+  } else if(DRAG.type === 'orbit'){
+    const dx = e.clientX - DRAG.startX;
+    STATE.rotY = DRAG.startRot + dx * 0.01;
+  }
+});
+map.addEventListener('pointerup', (e) => {
+  if(!DRAG) return;
+  if(DRAG.type === 'graph') DRAG.node._pinned = false;
+  DRAG = null;
+});
+map.addEventListener('pointerleave', () => {
+  if(DRAG){
+    if(DRAG.type === 'graph') DRAG.node._pinned = false;
+    DRAG = null;
+  }
+});
+
+function svgPoint(cx, cy){
+  const pt = map.createSVGPoint(); pt.x = cx; pt.y = cy;
+  const ctm = map.getScreenCTM().inverse();
+  const p = pt.matrixTransform(ctm);
+  return { x: p.x, y: p.y };
+}
+
+/* ============ PULSES ============ */
+let pulseTokens = [];
+function rebuildPulses(){
+  pulsesG.innerHTML = '';
+  pulseTokens = [];
+  if(STATE.pulseDensity <= 0) return;
+  const N = STATE.pulseDensity;
+  for(let i=0;i<N;i++){
+    const cr = DATA.crosses[i % DATA.crosses.length];
+    const p = ns('circle', { class:'pulse', r:3 });
+    pulsesG.appendChild(p);
+    pulseTokens.push({ el:p, cross:cr, t: Math.random(), dir: Math.random()<0.5 ? 1 : -1, speed: 0.08 + Math.random()*0.12 });
+  }
+}
+
+function paintPulses(){
+  pulseTokens.forEach(tk => {
+    const cr = tk.cross;
+    if(!cr._path) return;
+    const aN = NODES.find(n => n.kind==='sub' && n.cluster.id===cr.a && (n.sub.id===cr.id || n.sub.cross===cr.id));
+    const bN = NODES.find(n => n.kind==='sub' && n.cluster.id===cr.b && (n.sub.id===cr.id || n.sub.cross===cr.id));
+    if(!aN || !bN){ tk.el.style.display='none'; return; }
+    let ax=aN.x, ay=aN.y, bx=bN.x, by=bN.y;
+    if(STATE.mode === 'orbit'){
+      const a = projectOrbit(aN, performance.now()/1000);
+      const b = projectOrbit(bN, performance.now()/1000);
+      ax=a.x; ay=a.y; bx=b.x; by=b.y;
+    }
+    const mx=(ax+bx)/2, my=(ay+by)/2;
+    let cpx, cpy;
+    if(STATE.mode === 'orbit'){ cpx=mx; cpy=my-80; }
+    else {
+      const ex=by-ay, ey=ax-bx; const en=Math.hypot(ex,ey)||1;
+      const dist=Math.hypot(bx-ax,by-ay); const off=Math.min(80, dist*0.18);
+      const sign = cr._sign || 1;
+      cpx=mx+(ex/en)*off*sign; cpy=my+(ey/en)*off*sign;
+    }
+    const t = tk.t;
+    const u = 1-t;
+    const x = u*u*ax + 2*u*t*cpx + t*t*bx;
+    const y = u*u*ay + 2*u*t*cpy + t*t*by;
+    tk.el.setAttribute('cx', x);
+    tk.el.setAttribute('cy', y);
+    tk.el.style.opacity = Math.sin(t*Math.PI) * 0.95 + 0.05;
+    tk.el.style.display = '';
+  });
+}
+
+/* ============ MAIN LOOP ============ */
+let lastT = performance.now();
+function loop(now){
+  const dt = Math.min(0.05, (now - lastT)/1000) * STATE.speed;
+  lastT = now;
+
+  STATE.parallax.x += (parallaxTarget.x - STATE.parallax.x) * 0.08;
+  STATE.parallax.y += (parallaxTarget.y - STATE.parallax.y) * 0.08;
+  if(STATE.mode === 'constellation'){
+    parallax.setAttribute('transform', `translate(${STATE.parallax.x.toFixed(2)} ${STATE.parallax.y.toFixed(2)})`);
+  } else {
+    parallax.setAttribute('transform', '');
+  }
+
+  if(STATE.mode === 'graph' && GRAPH_ALIVE){
+    stepGraph(dt * 60);
+    paintGraph();
+  }
+
+  if(STATE.mode === 'orbit'){
+    if(!DRAG) STATE.rotY += dt * 0.18;
+    drawOrbit(now / 1000);
+  }
+
+  pulseTokens.forEach(tk => {
+    tk.t += tk.speed * dt * tk.dir;
+    if(tk.t > 1) tk.t = 0;
+    if(tk.t < 0) tk.t = 1;
+  });
+  paintPulses();
+
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ============ MOBILE STACK ============ */
+const msList = $('#ms-clusters');
+DATA.clusters.forEach(c => {
+  const el = document.createElement('div');
+  el.className = 'ms-cluster';
+  el.innerHTML = `
+    <div class="ms-eigen"><span class="num">N° ${c.num}</span>${c.label}</div>
+    <div class="ms-of">${c.of}. ${escapeHtml(c.voice)}</div>
+    <div class="ms-list">
+      ${c.subs.map(s => {
+        const isCross = !!s.cross;
+        const cls = ['pill', s.lvl===0 ? 'hollow' : '', isCross ? 'cross' : ''].filter(Boolean).join(' ');
+        return `<span class="${cls}"><span class="d"></span>${escapeHtml(s.id)}</span>`;
+      }).join('')}
+    </div>
+  `;
+  msList.appendChild(el);
+});
+const msWires = $('#ms-wires-list');
+DATA.crosses.forEach(cr => {
+  const li = document.createElement('li');
+  li.innerHTML = `<b>${cr.label}</b> ${cr.a.toLowerCase()} <em>↔</em> ${cr.b.toLowerCase()}`;
+  msWires.appendChild(li);
+});
+
+/* ============ MODE SWITCH (layout) ============ */
+function setMode(m){
+  STATE.mode = m;
+  $$('#modes .m').forEach(el => el.classList.toggle('on', el.dataset.mode === m));
+  $$('#tw-mode button').forEach(el => el.classList.toggle('on', el.dataset.mode === m));
+  STATE.locked = null; fig.classList.remove('locked'); clearAll(); setFigEmpty();
+  STATE.rotY = 0;
+  render();
+}
+$$('#modes .m').forEach(el => el.addEventListener('click', () => setMode(el.dataset.mode)));
+$$('#tw-mode button').forEach(el => el.addEventListener('click', () => setMode(el.dataset.mode)));
+
+/* ============ TWEAKS ============ */
+const tweaksPanel = $('#tweaks');
+window.addEventListener('message', (e) => {
+  const m = e.data;
+  if(!m || typeof m !== 'object') return;
+  if(m.type === '__activate_edit_mode'){ tweaksPanel.classList.add('show'); }
+  else if(m.type === '__deactivate_edit_mode'){ tweaksPanel.classList.remove('show'); }
+});
+window.parent.postMessage({type:'__edit_mode_available'}, '*');
+$('#tweaksClose').addEventListener('click', () => {
+  tweaksPanel.classList.remove('show');
+  window.parent.postMessage({type:'__edit_mode_dismissed'}, '*');
+});
+$('#tw-speed').addEventListener('input', (e) => {
+  STATE.speed = e.target.value / 100;
+  $('#speedLbl').textContent = STATE.speed.toFixed(1)+'×';
+});
+$('#tw-pulse').addEventListener('input', (e) => {
+  STATE.pulseDensity = +e.target.value;
+  $('#pulseLbl').textContent = STATE.pulseDensity;
+  rebuildPulses();
+});
+$$('#tw-labels button').forEach(b => b.addEventListener('click', () => {
+  $$('#tw-labels button').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+  STATE.showAllLabels = b.dataset.on === 'true';
+  if(STATE.showAllLabels) map.classList.add('show-all'); else map.classList.remove('show-all');
+}));
+
+/* version pill toggles tweaks */
+$('#versionToggle').addEventListener('click', () => {
+  tweaksPanel.classList.toggle('show');
+});
+
+/* ============ INIT ============ */
+setFigEmpty();
+render();
+</script>
+<!-- ====== MUSIC PLAYER (Azuki-style) ====== -->
+<style>
+.music-player {
+  position: fixed;
+  bottom: 22px;
+  left: 22px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 18px 10px 12px;
+  background: rgba(20,14,10,.82);
+  backdrop-filter: blur(14px) saturate(1.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  border-radius: 999px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.22);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  color: #EDE6D2;
+  transition: transform .35s cubic-bezier(.2,.8,.2,1), opacity .3s, background .3s;
+  max-width: min(560px, calc(100vw - 44px));
+  user-select: none;
+}
+:root[data-mode="dark"] .music-player { background: rgba(8,16,12,.82); }
+.music-player[data-state="loading"] { opacity: 0; transform: translateY(20px) scale(.96); pointer-events: none; }
+.music-player[data-state="paused"], .music-player[data-state="playing"] { opacity: 1; transform: none; pointer-events: auto; }
+.music-player.minimized {
+  padding: 0; width: 56px; height: 56px;
+  border-radius: 50%; gap: 0; overflow: hidden;
+  cursor: pointer;
+}
+.music-player.minimized .mp-info,
+.music-player.minimized .mp-controls,
+.music-player.minimized .mp-eq,
+.music-player.minimized .mp-min { display: none; }
+.music-player.minimized .mp-album { width: 100%; height: 100%; border: 0; border-radius: 0; }
+.music-player.minimized:hover { transform: scale(1.04); }
+.mp-album {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  overflow: hidden; flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,.14);
+  background: #15110D;
+  cursor: pointer;
+}
+.mp-album img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 12s linear;
+}
+.music-player[data-state="playing"] .mp-album img { transform: rotate(360deg); animation: mpSpin 12s linear infinite; }
+@keyframes mpSpin { to { transform: rotate(360deg); } }
+.mp-eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 16px; }
+.mp-eq span {
+  display: inline-block;
+  width: 3px;
+  background: #C8341E;
+  transform-origin: bottom;
+}
+:root[data-mode="dark"] .mp-eq span { background: #D4FF3A; }
+.music-player[data-state="playing"] .mp-eq span { animation: mpBars 1.1s ease-in-out infinite; }
+.mp-eq span:nth-child(1) { animation-delay: -.4s; height: 60%; }
+.mp-eq span:nth-child(2) { animation-delay: -.05s; height: 100%; }
+.mp-eq span:nth-child(3) { animation-delay: -.6s; height: 40%; }
+.mp-eq span:nth-child(4) { animation-delay: -.2s; height: 80%; }
+@keyframes mpBars { 0%, 100% { transform: scaleY(.3); } 50% { transform: scaleY(1); } }
+.mp-info { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+.mp-title {
+  font-family: 'Anton', Impact, sans-serif;
+  font-size: 14.5px;
+  letter-spacing: .035em;
+  text-transform: uppercase;
+  font-weight: 400;
+  color: #fff;
+  line-height: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 220px;
+}
+.mp-artist {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgba(237,230,210,.55);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 220px;
+}
+.mp-controls { display: flex; gap: 4px; align-items: center; margin-left: 8px; }
+.mp-btn {
+  background: none; border: 0;
+  color: rgba(237,230,210,.78);
+  cursor: pointer;
+  padding: 6px 4px;
+  font-size: 13px;
+  line-height: 1;
+  transition: color .2s, transform .2s;
+  font-family: inherit;
+}
+.mp-btn:hover { color: #fff; transform: scale(1.12); }
+.mp-play { font-size: 15px; padding: 6px 8px; }
+.mp-min {
+  position: absolute;
+  top: -8px; right: -4px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(237,230,210,.45);
+  background: rgba(20,14,10,.95);
+  color: rgba(237,230,210,.85);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+  font-family: inherit;
+  padding: 0;
+}
+.mp-min:hover { color: #fff; border-color: rgba(237,230,210,.85); }
+.mp-hint {
+  position: absolute;
+  top: -28px; left: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(237,230,210,.6);
+  background: rgba(20,14,10,.82);
+  backdrop-filter: blur(8px);
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .35s, transform .35s;
+  pointer-events: none;
+}
+.music-player[data-muted="true"] .mp-hint { opacity: 1; transform: none; }
+@media (max-width: 560px) {
+  .music-player { bottom: 14px; left: 14px; padding: 8px 14px 8px 10px; gap: 10px; }
+  .mp-album { width: 36px; height: 36px; }
+  .mp-title { max-width: 110px; font-size: 12.5px; }
+  .mp-artist { max-width: 110px; font-size: 9px; }
+  .mp-eq { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .music-player[data-state="playing"] .mp-album img { animation: none; transform: none; }
+  .music-player[data-state="playing"] .mp-eq span { animation: none; }
+}
+</style>
+
+<div class="music-player" id="musicPlayer" data-state="loading" data-muted="true" aria-label="Music player">
+  <div class="mp-album" id="mpAlbum">
+    <img src="https://i.ytimg.com/vi/3qrKjywjo7Q/hqdefault.jpg" alt="" loading="eager" />
+  </div>
+  <div class="mp-eq" aria-hidden="true">
+    <span></span><span></span><span></span><span></span>
+  </div>
+  <div class="mp-info">
+    <div class="mp-title" id="mpTitle">THE SWAN</div>
+    <div class="mp-artist" id="mpArtist">Yo-Yo Ma &amp; Kathryn Stott</div>
+  </div>
+  <div class="mp-controls">
+    <button class="mp-btn mp-prev" id="mpPrev" aria-label="Previous track" type="button">⏮</button>
+    <button class="mp-btn mp-play" id="mpPlay" aria-label="Play / Pause" type="button">▶</button>
+    <button class="mp-btn mp-next" id="mpNext" aria-label="Next track" type="button">⏭</button>
+  </div>
+  <span class="mp-hint" aria-hidden="true">Tap anywhere to unmute</span>
+  <button class="mp-min" id="mpMin" aria-label="Minimize player" type="button">−</button>
+  <div id="ytFrame" style="position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;pointer-events:none;"></div>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+(function(){
+  // Curated classical-leaning playlist; Succession theme plays last.
+  const PLAYLIST = [
+    '3qrKjywjo7Q', // Yo-Yo Ma & Kathryn Stott — The Swan (Saint-Saëns)
+    'GRxofEmo3HA', // Vivaldi — The Four Seasons
+    '1prweT95Mo0', // Yo-Yo Ma — Bach: Cello Suite No. 1 in G Major, Prélude
+    '9aOceCPg5CA', // Vivaldi — Four Seasons, Winter (Allegro non molto)
+    'LlgWqcHXD8w'  // Nicholas Britell — Succession (Main Title Theme)
+  ];
+  let trackIdx = 0;
+  let ytPlayer = null;
+  let isPlaying = false;
+  let isMuted = true;
+  const player = document.getElementById('musicPlayer');
+  const playBtn = document.getElementById('mpPlay');
+  const prevBtn = document.getElementById('mpPrev');
+  const nextBtn = document.getElementById('mpNext');
+  const minBtn = document.getElementById('mpMin');
+  const album = document.getElementById('mpAlbum');
+  const titleEl = document.getElementById('mpTitle');
+  const artistEl = document.getElementById('mpArtist');
+
+  // restore minimized state across pages
+  if (localStorage.getItem('mp-minimized') === '1') {
+    player.classList.add('minimized');
+  }
+
+  function setIcon(playing){
+    playBtn.innerHTML = playing ? '⏸' : '▶';
+  }
+
+  function updateTrackInfo(){
+    if (!ytPlayer || !ytPlayer.getVideoData) return;
+    const d = ytPlayer.getVideoData();
+    if (!d || !d.title) return;
+    const t = d.title.replace(/\s*\(.*?\)\s*/g, '').replace(/\s*\[.*?\]\s*/g, '').trim();
+    const sep = t.match(/\s+[-—–]\s+/);
+    if (sep) {
+      const i = t.indexOf(sep[0]);
+      const left = t.slice(0, i).trim();
+      const right = t.slice(i + sep[0].length).trim();
+      titleEl.textContent = right.toUpperCase();
+      artistEl.textContent = left;
+    } else {
+      titleEl.textContent = t.toUpperCase();
+      if (d.author) artistEl.textContent = d.author.replace(/\s*-?\s*Topic$/i,'').trim();
+    }
+    if (d.video_id) {
+      album.querySelector('img').src = `https://i.ytimg.com/vi/${d.video_id}/hqdefault.jpg`;
+    }
+  }
+
+  window.onYouTubeIframeAPIReady = function(){
+    ytPlayer = new YT.Player('ytFrame', {
+      height: '1', width: '1',
+      videoId: PLAYLIST[0],
+      playerVars: {
+        autoplay: 1, controls: 0, mute: 1,
+        modestbranding: 1, playsinline: 1, rel: 0
+      },
+      events: {
+        onReady: function(e){
+          player.setAttribute('data-state', 'paused');
+          try { e.target.playVideo(); } catch(_){}
+          // unmute on first interaction anywhere
+          const unmute = () => {
+            try { ytPlayer.unMute(); ytPlayer.setVolume(70); } catch(_){}
+            isMuted = false;
+            player.setAttribute('data-muted', 'false');
+            window.removeEventListener('click', unmute, true);
+            window.removeEventListener('scroll', unmute, true);
+            window.removeEventListener('keydown', unmute, true);
+            window.removeEventListener('touchstart', unmute, true);
+          };
+          window.addEventListener('click', unmute, true);
+          window.addEventListener('scroll', unmute, true);
+          window.addEventListener('keydown', unmute, true);
+          window.addEventListener('touchstart', unmute, true);
+        },
+        onStateChange: function(e){
+          if (e.data === YT.PlayerState.PLAYING) {
+            isPlaying = true;
+            player.setAttribute('data-state', 'playing');
+            setIcon(true);
+            updateTrackInfo();
+          } else if (e.data === YT.PlayerState.PAUSED) {
+            isPlaying = false;
+            player.setAttribute('data-state', 'paused');
+            setIcon(false);
+          } else if (e.data === YT.PlayerState.ENDED) {
+            trackIdx = (trackIdx + 1) % PLAYLIST.length;
+            try { ytPlayer.loadVideoById(PLAYLIST[trackIdx]); } catch(_){}
+          } else if (e.data === YT.PlayerState.CUED) {
+            updateTrackInfo();
+          }
+        },
+        onError: function(){
+          player.setAttribute('data-state', 'paused');
+        }
+      }
+    });
+  };
+
+  playBtn.addEventListener('click', function(ev){
+    ev.stopPropagation();
+    if (!ytPlayer) return;
+    if (isPlaying) { ytPlayer.pauseVideo(); }
+    else { try { ytPlayer.unMute(); } catch(_){} ytPlayer.playVideo(); }
+  });
+  prevBtn.addEventListener('click', function(ev){ ev.stopPropagation(); if (!ytPlayer) return; trackIdx = (trackIdx - 1 + PLAYLIST.length) % PLAYLIST.length; try { ytPlayer.loadVideoById(PLAYLIST[trackIdx]); } catch(_){} });
+  nextBtn.addEventListener('click', function(ev){ ev.stopPropagation(); if (!ytPlayer) return; trackIdx = (trackIdx + 1) % PLAYLIST.length; try { ytPlayer.loadVideoById(PLAYLIST[trackIdx]); } catch(_){} });
+  minBtn.addEventListener('click', function(ev){
+    ev.stopPropagation();
+    player.classList.add('minimized');
+    localStorage.setItem('mp-minimized', '1');
+  });
+  album.addEventListener('click', function(ev){
+    if (player.classList.contains('minimized')) {
+      ev.stopPropagation();
+      player.classList.remove('minimized');
+      localStorage.setItem('mp-minimized', '0');
+    }
+  });
+})();
+</script>
+<!-- ====== /MUSIC PLAYER ====== -->
+
+</body>
+</html>
