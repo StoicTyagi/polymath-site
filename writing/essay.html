@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Boil Oceans With AI — Eigen.</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link href="https://fonts.bunny.net/css?family=anton:400|inter:400,500,600,700|jetbrains-mono:400,500|instrument-serif:400i&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --paper:    #EDE6D2;
+  --paper-2:  #E2DABF;
+  --ink:      #15110D;
+  --ink-soft: rgba(21,17,13,.66);
+  --ink-line: rgba(21,17,13,.18);
+  --ink-faint:rgba(21,17,13,.08);
+  --red:      #C8341E;
+  --blue:     #1F46B0;
+  --yellow:   #E8B131;
+  --green:    #1E5A3A;
+  --plum:     #6E2A60;
+
+  --display: 'Anton','Druk Wide','Bebas Neue',Impact,sans-serif;
+  --serif:   'Instrument Serif','EB Garamond',Georgia,serif;
+  --body:    'Inter',system-ui,sans-serif;
+  --mono:    'JetBrains Mono',ui-monospace,Menlo,monospace;
+
+  --gutter: clamp(20px, 4vw, 56px);
+
+  /* reading column — generous, but never wider than ~62ch */
+  --measure: 64ch;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{ background:var(--paper); color:var(--ink); }
+html{ scroll-behavior:smooth; }
+body{
+  font-family:var(--body); font-weight:400;
+  font-size:clamp(16px,1.1vw,18px); line-height:1.5;
+  overflow-x:hidden;
+  min-height:100vh;
+}
+::selection{ background:var(--red); color:var(--paper); }
+a{ color:inherit; text-decoration:none; }
+button{ font:inherit; color:inherit; background:none; border:0; cursor:pointer; }
+
+/* paper grain — same as the main site */
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:1;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.08  0 0 0 0 0.07  0 0 0 0 0.05  0 0 0 0.18 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  opacity:.55; mix-blend-mode:multiply;
+}
+
+main{ position:relative; z-index:2; }
+
+/* ============ TOPBAR (quieter on essay pages) ============ */
+.topbar{
+  position:sticky; top:0; left:0; right:0; z-index:40;
+  display:grid; grid-template-columns: 1fr auto 1fr;
+  align-items:center; gap: 18px;
+  padding:14px var(--gutter);
+  background: linear-gradient(to bottom, rgba(237,230,210,.96) 0%, rgba(237,230,210,.7) 70%, rgba(237,230,210,0) 100%);
+  backdrop-filter: blur(2px);
+}
+.topbar .home-link{
+  font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--ink-soft);
+  display:inline-flex; align-items:center; gap:8px;
+  transition: color .25s ease;
+  justify-self:start;
+}
+.topbar .home-link:hover{ color:var(--red); }
+.topbar .mark{
+  display:inline-flex; align-items:center; gap:8px;
+  font-family:var(--display); font-size:16px; line-height:1; text-transform:uppercase;
+  color:var(--ink); letter-spacing:.005em;
+  justify-self:center;
+}
+.topbar .mark .dot{ color:var(--red); }
+.topbar .mark svg{ width:16px; height:16px; }
+.topbar .right{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--ink-soft);
+  justify-self:end;
+}
+
+/* progress bar — top hairline, fills in red as you scroll */
+.progress{
+  position:fixed; top:0; left:0; right:0; height:2px; z-index:50;
+  background: var(--ink-line);
+}
+.progress .bar{ height:100%; background:var(--red); width:0%; transition: width .12s linear; }
+
+/* ============ ARTICLE ============ */
+article{
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: clamp(48px, 7vw, 96px) var(--gutter) clamp(64px, 10vw, 144px);
+  position:relative;
+}
+@media (min-width: 1180px){
+  /* widen container so marginalia has somewhere to live */
+  article{
+    max-width: calc(var(--measure) + 360px);
+    padding-right: calc(var(--gutter) + 0px);
+  }
+  article > *{ max-width: var(--measure); }
+}
+
+/* eyebrow */
+.eyebrow{
+  font-family:var(--mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+  color: var(--ink-soft);
+  display:flex; gap: 18px; flex-wrap:wrap;
+  margin-bottom: 28px;
+}
+.eyebrow .red{ color: var(--red); }
+.eyebrow span + span{ position:relative; padding-left:18px; }
+.eyebrow span + span::before{ content:"·"; position:absolute; left:6px; color:var(--ink-line); }
+
+/* title */
+h1.title{
+  font-family:var(--display); font-weight:400;
+  font-size: clamp(48px, 7.5vw, 116px);
+  line-height:.88; text-transform:uppercase;
+  letter-spacing:.005em;
+  color: var(--ink);
+  margin-bottom: 28px;
+}
+h1.title .serif{
+  font-family:var(--serif); font-style:italic; font-weight:400;
+  text-transform:none; color:var(--red); letter-spacing:-0.02em;
+  font-size:.62em;
+  display:block;
+  margin-top: .12em;
+}
+
+.sub-dek{
+  font-family:var(--serif); font-style:italic;
+  font-size: clamp(20px, 1.6vw, 26px);
+  line-height:1.32;
+  color: var(--ink-soft);
+  max-width: 38ch;
+  margin-bottom: 40px;
+}
+
+.byline{
+  display:flex; justify-content:space-between; align-items:baseline;
+  padding: 18px 0;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink-line);
+  font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 56px;
+}
+.byline .by{ color: var(--ink); }
+
+/* drop cap — first letter of first <p> after .lede gets a giant Anton red cap */
+.lede{
+  font-family:var(--serif); font-style:italic;
+  font-size: clamp(22px, 2vw, 30px);
+  line-height:1.34;
+  color: var(--ink);
+  margin-bottom: 40px;
+  max-width: 36ch;
+}
+
+article p{
+  font-family:var(--body); font-weight:400;
+  font-size: clamp(17px, 1.15vw, 19px);
+  line-height: 1.72;
+  margin-bottom: 1.4em;
+  color: var(--ink);
+}
+
+/* the drop cap */
+article .body > p:first-child::first-letter{
+  font-family:var(--display); font-weight:400;
+  font-size: 6.4em; line-height:.82;
+  float:left;
+  color: var(--red);
+  margin: .04em .08em -.05em 0;
+  padding-right: .04em;
+  text-transform:uppercase;
+}
+
+article h2{
+  font-family:var(--display); font-weight:400;
+  font-size: clamp(28px, 3vw, 44px);
+  line-height:.96; text-transform:uppercase;
+  letter-spacing:.005em;
+  color: var(--ink);
+  margin: 56px 0 20px;
+}
+article h2 .serif{
+  font-family:var(--serif); font-style:italic; font-weight:400;
+  text-transform:none; color:var(--red); letter-spacing:-0.02em;
+  font-size:.6em; margin-left:.2em;
+}
+
+article blockquote{
+  margin: 32px 0;
+  padding: 6px 0 6px 24px;
+  border-left: 3px solid var(--red);
+  font-family:var(--serif); font-style:italic;
+  font-size: clamp(22px, 1.7vw, 28px);
+  line-height:1.34;
+  color: var(--ink);
+}
+article blockquote cite{
+  display:block; margin-top:14px;
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.18em; text-transform:uppercase;
+  color: var(--ink-soft); font-style:normal;
+}
+
+article em{ font-family:var(--serif); font-style:italic; }
+article strong{ font-weight:700; color:var(--ink); }
+article a.inline{ border-bottom: 1px solid var(--red); transition: background .25s ease; }
+article a.inline:hover{ background: var(--red); color: var(--paper); }
+
+/* marginalia — proper nouns get a tiny gloss in the right margin on hover.
+   Only renders on wide screens; collapses to inline-italic on mobile. */
+.gloss{
+  position:relative;
+  border-bottom: 1px dotted var(--ink-line);
+  cursor: help;
+}
+@media (min-width: 1180px){
+  .gloss::after{
+    content: attr(data-gloss);
+    position: absolute;
+    left: calc(var(--measure) - 0px); /* into the right margin */
+    top: 0;
+    width: 280px;
+    margin-left: 36px;
+    font-family: var(--serif); font-style:italic; font-weight:400;
+    font-size: 14.5px; line-height: 1.4;
+    color: var(--ink-soft);
+    border-left: 1px solid var(--red);
+    padding: 4px 0 4px 14px;
+    opacity: 0; pointer-events: none;
+    transition: opacity .35s ease, transform .35s ease;
+    transform: translateX(-6px);
+    text-transform:none; letter-spacing:0;
+  }
+  .gloss:hover::after{ opacity: 1; transform: none; }
+}
+
+/* THE END — Nick Gray homage */
+.endmark{
+  margin-top: 64px;
+  padding-top: 28px;
+  border-top: 1px solid var(--ink);
+  font-family: var(--display); font-weight:400;
+  font-size: clamp(32px, 4vw, 56px);
+  line-height: 1; text-transform:uppercase;
+  letter-spacing:.005em;
+  color: var(--ink);
+}
+.endmark .stop{ color: var(--red); }
+
+/* ============ AFTER-ESSAY — author / next reads ============ */
+.after{
+  border-top: 2px solid var(--ink);
+  margin-top: clamp(56px, 8vw, 96px);
+  padding: clamp(40px, 6vw, 72px) var(--gutter);
+}
+.after .grid{
+  max-width: 1100px; margin: 0 auto;
+  display:grid; grid-template-columns: 1fr 1.6fr;
+  gap: clamp(24px, 4vw, 64px);
+}
+@media (max-width: 880px){ .after .grid{ grid-template-columns: 1fr; } }
+
+.after .who{
+  font-family: var(--serif); font-style:italic;
+  font-size: clamp(17px, 1.3vw, 21px);
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+.after .who strong{
+  display:block;
+  font-family: var(--display); font-weight:400; font-style:normal;
+  font-size: clamp(28px, 3vw, 44px);
+  line-height: .96; text-transform:uppercase;
+  letter-spacing:.005em;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+.after .who strong .stop{ color: var(--red); }
+.after .who a{ border-bottom:1px solid var(--red); }
+
+.after .next h3{
+  font-family: var(--mono); font-size:11px; letter-spacing:.2em; text-transform:uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 18px;
+}
+.after .next a{
+  display:grid; grid-template-columns: 1fr 100px;
+  gap: 18px; padding: 18px 0;
+  border-top: 1px solid var(--ink-line);
+  align-items:baseline;
+  transition: padding-left .3s ease;
+}
+.after .next a:hover{ padding-left: 10px; }
+.after .next a:last-child{ border-bottom: 1px solid var(--ink-line); }
+.after .next .ttl{
+  font-family: var(--display); font-weight:400;
+  font-size: clamp(20px, 2vw, 26px);
+  line-height:1; text-transform:uppercase;
+  letter-spacing:.005em;
+  color: var(--ink); transition: color .25s ease;
+}
+.after .next a:hover .ttl{ color: var(--red); }
+.after .next .ttl .serif{
+  font-family: var(--serif); font-style:italic; font-weight:400;
+  text-transform:none; color:var(--red); letter-spacing:-0.02em; font-size:.74em;
+}
+.after .next .meta{
+  font-family: var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+  color: var(--ink-soft);
+  text-align:right;
+}
+
+/* ============ FOOTER ============ */
+footer{
+  border-top: 2px solid var(--ink);
+  padding: clamp(48px, 7vw, 88px) var(--gutter) 32px;
+  background: var(--paper);
+  position:relative; z-index:2;
+}
+footer .grid{
+  max-width: 1100px; margin: 0 auto;
+  display:grid; grid-template-columns: 1.4fr 1fr 1fr;
+  gap: clamp(28px, 4vw, 72px);
+  margin-bottom: 48px;
+}
+footer .sub h3{
+  font-family:var(--display); font-weight:400;
+  font-size: clamp(28px, 3vw, 44px);
+  line-height:.96; text-transform:uppercase;
+  margin-bottom: 16px;
+  letter-spacing:.005em;
+}
+footer .sub h3 .stop{ color: var(--red); }
+footer .sub p{
+  font-family:var(--serif); font-style:italic;
+  font-size: clamp(16px, 1.2vw, 19px); line-height:1.4;
+  color:var(--ink-soft);
+  max-width: 36ch;
+  margin-bottom: 18px;
+}
+footer .sub form{
+  display:flex; gap: 0;
+  border:1.5px solid var(--ink);
+  max-width: 460px;
+}
+footer .sub input{
+  flex:1; padding: 14px 16px;
+  background: transparent; border:0; outline:0;
+  font-family:var(--body); font-size:14px;
+  color:var(--ink);
+}
+footer .sub input::placeholder{ color: var(--ink-soft); }
+footer .sub button{
+  background: var(--ink); color: var(--paper);
+  padding: 14px 22px;
+  font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+  font-weight:500;
+  transition: background .25s ease;
+  border-left: 1.5px solid var(--ink);
+}
+footer .sub button:hover{ background: var(--red); border-color: var(--red); }
+footer .sub .small{
+  margin-top: 10px;
+  font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase;
+  color: var(--ink-soft);
+}
+footer .col h4{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.2em; text-transform:uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 16px;
+}
+footer .col ul{ list-style:none; display:flex; flex-direction:column; gap: 10px; }
+footer .col li a{
+  font-family:var(--display); font-weight:400;
+  font-size: 22px; line-height:1; text-transform:uppercase;
+  letter-spacing:.005em;
+  transition: color .25s ease;
+}
+footer .col li a:hover{ color: var(--red); }
+footer .baseline{
+  max-width: 1100px; margin: 0 auto;
+  display:flex; justify-content:space-between; align-items:center;
+  padding-top: 28px;
+  border-top: 1px solid var(--ink-line);
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.18em; text-transform:uppercase;
+  color: var(--ink-soft);
+}
+footer .baseline .visit{ color: var(--ink); }
+@media (max-width: 880px){
+  footer .grid{ grid-template-columns: 1fr; }
+  footer .baseline{ flex-direction:column; gap:14px; align-items:flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior:auto; }
+}
+</style>
+</head>
+<body>
+
+<div class="progress" aria-hidden="true"><div class="bar" id="prog"></div></div>
+
+<main>
+
+<!-- ============ TOPBAR ============ -->
+<nav class="topbar" aria-label="Site">
+  <a class="home-link" href="./">
+    <span>←</span><span>All essays</span>
+  </a>
+  <a class="mark" href="./" aria-label="Eigen blog">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1" opacity=".5"/>
+      <circle cx="12" cy="12" r="2.6" fill="#C8341E"/>
+    </svg>
+    EIGEN<span class="dot">.</span>
+  </a>
+  <span class="right">№ 014</span>
+</nav>
+
+<!-- ============ ARTICLE ============ -->
+<article>
+
+  <div class="eyebrow">
+    <span>Field Note</span>
+    <span class="red">Pinned · 01</span>
+    <span>April 21 · 2026</span>
+  </div>
+
+  <h1 class="title">
+    Boil Oceans With AI
+    <span class="serif">but sprinkle the salt yourself</span>
+  </h1>
+
+  <p class="sub-dek">
+    The lowest form of AI usage is also the loudest. A short argument for keeping your fingers on the keyboard while letting the machine do the dishes.
+  </p>
+
+  <div class="byline">
+    <span class="by">By Anant Tyagi</span>
+    <span>Bombay · 6 min read</span>
+  </div>
+
+  <div class="body">
+
+    <p>
+      Using <span class="gloss" data-gloss="Large language models — the things everyone calls 'AI' on stage right now. The thing in your tab.">AI</span> to write your essays, your captions, your <em>thought-leader</em> LinkedIn posts and your talking-head videos is the lowest form of AI usage. Loudest, too. Maybe second only to short-form video for net IQ-drainage per minute spent.
+    </p>
+
+    <p>
+      The thing nobody wants to say out loud: writing is not a chore you outsource. Writing is the place where thinking happens. If you outsource the writing, you've outsourced the thinking, and you didn't even charge yourself for it.
+    </p>
+
+    <p>
+      Rudimentary creation — the act of translating a fuzzy thought into a sentence that holds — should stay analog. Not analog as in pen-and-paper analog. Analog as in <em>your</em> fingers, <em>your</em> hesitation, <em>your</em> third rewrite of the same sentence because the second one was a lie. This is the gym. This is what stops you from dropping IQ in the four years it takes for the rest of the internet to figure out which side of the trend they're on.
+    </p>
+
+    <h2>So what is AI good for, then <span class="serif">/ if not the actual sentence</span></h2>
+
+    <p>
+      Boiling oceans. The unglamorous, vast, repetitive part of any creative job — the part that used to be reserved for interns and graduate students and the kind of person who'd <span class="gloss" data-gloss="Verb. To go down a rabbit hole of background research at 2am because you got curious about one thing in a footnote.">spelunk</span> through forty <span class="gloss" data-gloss="JSTOR — the digital archive where most of academia lives. Free if your university paid; otherwise you're pirating PDFs like the rest of us.">JSTOR</span> tabs at 2am for one good citation. That's the part the machine is genuinely good at, and getting better at, and was always going to take.
+    </p>
+
+    <p>
+      You can ask it to read four hundred earnings calls. You can ask it to summarize every interview <span class="gloss" data-gloss="Christopher Nolan. Director, Memento → Oppenheimer. The patron saint of taking yourself slightly too seriously, and being right about it.">Nolan</span> ever gave on the writing process. You can ask it to give you the seventeen counter-arguments to your draft before you publish it. None of that is the writing. All of that is data collection.
+    </p>
+
+    <blockquote>
+      Boil oceans using AI, but sprinkle the salt yourself, not the other way round.
+      <cite>— from this essay, said too many times now</cite>
+    </blockquote>
+
+    <p>
+      The salt is the part that takes taste. The bit where you decide which two of the seventeen counter-arguments are real and which fifteen are noise. The bit where you cut the joke that almost works because it pulls focus from the thing that actually works. The bit where you change the rhythm of a paragraph because the cadence was off and you couldn't say <em>why</em> until the eighth read.
+    </p>
+
+    <p>
+      That's the part that makes the writing yours, and that's the part the machine cannot do — not because the machine isn't smart enough, but because the machine isn't <em>you</em>, and a sentence that wasn't sprinkled by you doesn't carry your salt. It carries the median salt of every internet writer trained on every internet thing. <strong>Median is a good place to source data. It's a terrible place to publish from.</strong>
+    </p>
+
+    <h2>The trade you're actually being offered</h2>
+
+    <p>
+      Most people who use AI to write are making a quiet trade with themselves: <em>I'll save the time, and pay for it later in skill.</em> Then they don't pay attention to the bill. The bill arrives in the form of a year going by where you wrote a hundred posts and didn't get any sharper at writing posts. You got better at <em>prompting</em>, which is a different muscle, and a less interesting one, and one that depreciates the moment the model gets better.
+    </p>
+
+    <p>
+      The reverse trade is the one worth taking. Use the machine to <em>find</em> the salt — the obscure stat, the dropped quote from a forty-year-old book, the pattern across six bad essays — and then sprinkle it yourself. By hand. Slowly. With your taste and your weird sentence-rhythm and your one running joke that probably isn't as funny as you think it is.
+    </p>
+
+    <p>
+      You'll write less. You'll write better. The people who already write well will keep up just fine. The people who don't will sound, increasingly, like the same midwestern customer-service email everyone else's machine generates. That divergence is going to be one of the louder features of the next five years and almost nobody is calling it that out loud.
+    </p>
+
+    <p>
+      Boil oceans with AI. Sprinkle the salt yourself. Don't get this backwards.
+    </p>
+
+  </div>
+
+  <div class="endmark">THE END<span class="stop">.</span></div>
+
+</article>
+
+<!-- ============ AFTER ============ -->
+<section class="after">
+  <div class="grid">
+
+    <div class="who">
+      <strong>Anant Tyagi<span class="stop">.</span></strong>
+      Twenty-five, Bombay. Building a thing in stealth, lifting four-to-five times a week, co-writing scripts with friends, and reading more history than is probably useful. <a href="#">More about the rest of it</a>.
+    </div>
+
+    <div class="next">
+      <h3>Read next</h3>
+      <a href="#">
+        <span class="ttl">The Long Close <span class="serif">/ selling things people don't want yet</span></span>
+        <span class="meta">9 min · Mar 04</span>
+      </a>
+      <a href="#">
+        <span class="ttl">A Few Games At Once</span>
+        <span class="meta">11 min · Feb 18</span>
+      </a>
+      <a href="#">
+        <span class="ttl">What Cold Outreach Actually Costs</span>
+        <span class="meta">6 min · Apr 14</span>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="grid">
+
+    <div class="sub">
+      <h3>Eigen<span class="stop">.</span> in your inbox</h3>
+      <p>One email a month, mostly first Sundays. No drip, no funnel, no "PS." Subscribe via Substack.</p>
+      <form action="https://ananttyagi.substack.com/subscribe" method="get" target="_blank" rel="noopener">
+        <input type="email" name="email" placeholder="email@somewhere.com" aria-label="Your email">
+        <button type="submit">Subscribe →</button>
+      </form>
+      <div class="small">Substack handles the list. I just write the things.</div>
+    </div>
+
+    <div class="col">
+      <h4>Elsewhere on the site</h4>
+      <ul>
+        <li><a href="../">Home</a></li>
+        <li><a href="./">Writing</a></li>
+        <li><a href="../#dispatch">Now</a></li>
+        <li><a href="../neural-net/">Neural Net</a></li>
+      </ul>
+    </div>
+
+    <div class="col">
+      <h4>Off-site</h4>
+      <ul>
+        <li><a href="https://ananttyagi.substack.com" target="_blank" rel="noopener">Substack</a></li>
+        <li><a href="https://instagram.com/ananttyagi7" target="_blank" rel="noopener">Instagram</a></li>
+        <li><a href="mailto:ananttyagi13@gmail.com">Email</a></li>
+        <li><a href="#">RSS</a></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="baseline">
+    <span>Anant Tyagi · Bombay · MMXXVI</span>
+    <span>Visit <span class="visit">XV</span></span>
+  </div>
+</footer>
+
+</main>
+
+<script>
+  // tiny reading-progress bar
+  const bar = document.getElementById('prog');
+  const onScroll = () => {
+    const h = document.documentElement;
+    const pct = (h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight)) * 100;
+    bar.style.width = pct + '%';
+  };
+  document.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+</script>
+
+</body>
+</html>

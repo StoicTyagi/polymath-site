@@ -1597,6 +1597,7 @@ html:not([data-mode="dark"]) .hero .orrery text{ fill: rgba(242,233,208,.78); }
     <span class="mono-tag">· Vol I</span>
   </a>
   <nav class="topright" aria-label="Primary">
+    <a href="./writing/" class="btn-pill inv" aria-label="Writing"><span class="nn-text">Writing </span><span class="arr" aria-hidden="true">↗</span></a>
     <a href="./neural-net/" class="btn-pill inv" aria-label="Neural Net"><span class="nn-text">Neural Net </span><span class="arr" aria-hidden="true">↗</span></a>
     <button class="mode-toggle" id="mode-toggle" aria-label="Toggle color mode" aria-pressed="false" type="button">
       <span class="mode-icon" aria-hidden="true">☀</span><span class="mode-label">LIGHT</span>
@@ -2472,13 +2473,21 @@ $$('#games .card').forEach(card=>{
 <script>
 (function(){
   // Curated classical-leaning playlist; Succession theme plays last.
+  // Per-track {id, start?}: start (seconds) trims dead air at the head.
   const PLAYLIST = [
-    '3qrKjywjo7Q', // Yo-Yo Ma & Kathryn Stott — The Swan (Saint-Saëns)
-    'GRxofEmo3HA', // Vivaldi — The Four Seasons
-    '1prweT95Mo0', // Yo-Yo Ma — Bach: Cello Suite No. 1 in G Major, Prélude
-    '9aOceCPg5CA', // Vivaldi — Four Seasons, Winter (Allegro non molto)
-    'LlgWqcHXD8w'  // Nicholas Britell — Succession (Main Title Theme)
+    { id:'3qrKjywjo7Q', start:4 },  // Yo-Yo Ma & Kathryn Stott — The Swan (skip ~3s of silence)
+    { id:'GRxofEmo3HA' },           // Vivaldi — The Four Seasons
+    { id:'1prweT95Mo0' },           // Yo-Yo Ma — Bach: Cello Suite No. 1 in G Major, Prélude
+    { id:'9aOceCPg5CA' },           // Vivaldi — Four Seasons, Winter (Allegro non molto)
+    { id:'LlgWqcHXD8w' }            // Nicholas Britell — Succession (Main Title Theme)
   ];
+  function loadTrack(idx){
+    const t = PLAYLIST[idx];
+    if (!ytPlayer || !t) return;
+    try {
+      ytPlayer.loadVideoById({ videoId: t.id, startSeconds: t.start || 0 });
+    } catch(_){}
+  }
   let trackIdx = 0;
   let ytPlayer = null;
   let isPlaying = false;
@@ -2525,10 +2534,11 @@ $$('#games .card').forEach(card=>{
   window.onYouTubeIframeAPIReady = function(){
     ytPlayer = new YT.Player('ytFrame', {
       height: '1', width: '1',
-      videoId: PLAYLIST[0],
+      videoId: PLAYLIST[0].id,
       playerVars: {
         autoplay: 1, controls: 0, mute: 1,
-        modestbranding: 1, playsinline: 1, rel: 0
+        modestbranding: 1, playsinline: 1, rel: 0,
+        start: PLAYLIST[0].start || 0
       },
       events: {
         onReady: function(e){
@@ -2561,7 +2571,7 @@ $$('#games .card').forEach(card=>{
             setIcon(false);
           } else if (e.data === YT.PlayerState.ENDED) {
             trackIdx = (trackIdx + 1) % PLAYLIST.length;
-            try { ytPlayer.loadVideoById(PLAYLIST[trackIdx]); } catch(_){}
+            loadTrack(trackIdx);
           } else if (e.data === YT.PlayerState.CUED) {
             updateTrackInfo();
           }
@@ -2579,8 +2589,8 @@ $$('#games .card').forEach(card=>{
     if (isPlaying) { ytPlayer.pauseVideo(); }
     else { try { ytPlayer.unMute(); } catch(_){} ytPlayer.playVideo(); }
   });
-  prevBtn.addEventListener('click', function(ev){ ev.stopPropagation(); if (!ytPlayer) return; trackIdx = (trackIdx - 1 + PLAYLIST.length) % PLAYLIST.length; try { ytPlayer.loadVideoById(PLAYLIST[trackIdx]); } catch(_){} });
-  nextBtn.addEventListener('click', function(ev){ ev.stopPropagation(); if (!ytPlayer) return; trackIdx = (trackIdx + 1) % PLAYLIST.length; try { ytPlayer.loadVideoById(PLAYLIST[trackIdx]); } catch(_){} });
+  prevBtn.addEventListener('click', function(ev){ ev.stopPropagation(); if (!ytPlayer) return; trackIdx = (trackIdx - 1 + PLAYLIST.length) % PLAYLIST.length; loadTrack(trackIdx); });
+  nextBtn.addEventListener('click', function(ev){ ev.stopPropagation(); if (!ytPlayer) return; trackIdx = (trackIdx + 1) % PLAYLIST.length; loadTrack(trackIdx); });
   minBtn.addEventListener('click', function(ev){
     ev.stopPropagation();
     player.classList.add('minimized');

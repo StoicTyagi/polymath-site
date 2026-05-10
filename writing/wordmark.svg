@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 120" role="img" aria-label="Eigen.">
+  <title>Eigen.</title>
+  <defs>
+    <style>
+      .ink { fill: #15110D; }
+      .red { fill: #C8341E; }
+      /* Anton-equivalent fallback chain. The site loads Anton via Bunny Fonts;
+         when the SVG is embedded inside the site it inherits the loaded face.
+         Standalone, it falls through to Impact / system condensed. */
+      .wm {
+        font-family: 'Anton','Druk Wide','Bebas Neue',Impact,sans-serif;
+        font-weight: 400;
+        font-size: 120px;
+        letter-spacing: 0.005em;
+        text-transform: uppercase;
+      }
+    </style>
+  </defs>
+
+  <!-- Wordmark: 'Eigen' in ink, full-stop in red. The period is the move. -->
+  <text x="0" y="96" class="wm ink">EIGEN<tspan class="red">.</tspan></text>
+</svg>

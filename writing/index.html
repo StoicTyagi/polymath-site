@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Eigen. — Anant Tyagi</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link href="https://fonts.bunny.net/css?family=anton:400|inter:400,500,600,700|jetbrains-mono:400,500|instrument-serif:400i&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --paper:    #EDE6D2;
+  --paper-2:  #E2DABF;
+  --ink:      #15110D;
+  --ink-soft: rgba(21,17,13,.66);
+  --ink-line: rgba(21,17,13,.18);
+  --ink-faint:rgba(21,17,13,.08);
+  --red:      #C8341E;
+  --blue:     #1F46B0;
+  --yellow:   #E8B131;
+  --green:    #1E5A3A;
+  --plum:     #6E2A60;
+
+  --display: 'Anton','Druk Wide','Bebas Neue',Impact,sans-serif;
+  --serif:   'Instrument Serif','EB Garamond',Georgia,serif;
+  --body:    'Inter',system-ui,sans-serif;
+  --mono:    'JetBrains Mono',ui-monospace,Menlo,monospace;
+
+  --gutter: clamp(20px, 4vw, 56px);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{ background:var(--paper); color:var(--ink); }
+body{
+  font-family:var(--body); font-weight:500;
+  font-size:clamp(15px,1.05vw,17px); line-height:1.5;
+  overflow-x:hidden;
+  min-height:100vh;
+}
+::selection{ background:var(--red); color:var(--paper); }
+a{ color:inherit; text-decoration:none; }
+button{ font:inherit; color:inherit; background:none; border:0; cursor:pointer; }
+
+/* paper grain — same as the main site */
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:1;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.08  0 0 0 0 0.07  0 0 0 0 0.05  0 0 0 0.18 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  opacity:.55; mix-blend-mode:multiply;
+}
+
+/* subtle neural-net background — earns its place by staying near-invisible */
+.netbg{
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  width:100%; height:100%;
+  opacity:.18;
+}
+.netbg .node{ fill: var(--ink); }
+.netbg .link{ stroke: var(--ink); stroke-width:.6; fill:none; }
+
+main{ position:relative; z-index:2; }
+
+/* ============ TOPBAR ============ */
+.topbar{
+  position:sticky; top:0; left:0; right:0; z-index:40;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px var(--gutter);
+  background: linear-gradient(to bottom, rgba(237,230,210,.96) 0%, rgba(237,230,210,.78) 70%, rgba(237,230,210,0) 100%);
+  backdrop-filter: blur(2px);
+}
+.topbar .home-link{
+  font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--ink-soft);
+  display:inline-flex; align-items:center; gap:8px;
+  transition: color .25s ease;
+}
+.topbar .home-link:hover{ color:var(--red); }
+.topbar .home-link .arr{ font-family:var(--mono); }
+.topbar .right{
+  font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--ink-soft);
+  display:flex; gap:18px; align-items:center;
+}
+.topbar .right .red{ color:var(--red); }
+
+/* miniature orrery in topbar — single ring + sun */
+.topbar .mark{
+  display:inline-flex; align-items:center; gap:10px;
+  font-family:var(--display); font-size:18px; line-height:1; text-transform:uppercase;
+  color:var(--ink); letter-spacing:.005em;
+}
+.topbar .mark .dot{ color:var(--red); }
+.topbar .mark svg{ width:18px; height:18px; }
+
+/* ============ MASTHEAD ============ */
+.masthead{
+  padding: clamp(72px, 12vw, 140px) var(--gutter) clamp(48px,7vw,88px);
+  border-bottom: 2px solid var(--ink);
+  position:relative;
+}
+.masthead .meta-row{
+  display:flex; justify-content:space-between; align-items:baseline;
+  font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--ink-soft);
+  margin-bottom: 36px;
+}
+.masthead .meta-row .red{ color:var(--red); }
+
+.wordmark-big{
+  font-family:var(--display); font-weight:400;
+  font-size: clamp(96px, 18vw, 240px);
+  line-height:.84; text-transform:uppercase;
+  color:var(--ink);
+  letter-spacing:.005em;
+  display:flex; align-items:baseline; gap:.04em;
+}
+.wordmark-big .stop{ color:var(--red); }
+
+.masthead .dek{
+  margin-top: 32px;
+  font-family:var(--serif); font-style:italic;
+  font-size: clamp(20px, 2vw, 32px);
+  line-height:1.3;
+  color:var(--ink);
+  max-width: 36ch;
+}
+.masthead .dek .red{ color:var(--red); font-style:italic; }
+
+.masthead .stamp-row{
+  margin-top: 48px;
+  display:flex; gap: 28px; flex-wrap:wrap;
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.22em; text-transform:uppercase;
+  color:var(--ink-soft);
+}
+.masthead .stamp-row .stamp{
+  display:inline-flex; align-items:center; gap:8px;
+  padding: 6px 12px;
+  border:1px solid var(--ink-line);
+  border-radius:999px;
+}
+.masthead .stamp-row .stamp .pip{ width:6px; height:6px; border-radius:50%; background:var(--red); }
+
+/* ============ PINNED ============ */
+.section-label{
+  padding: clamp(56px, 8vw, 96px) var(--gutter) 18px;
+  display:flex; justify-content:space-between; align-items:end;
+  border-bottom: 1px solid var(--ink-line);
+}
+.section-label h2{
+  font-family:var(--display); font-weight:400;
+  font-size: clamp(28px, 3.6vw, 56px);
+  line-height:.92; text-transform:uppercase;
+  color:var(--ink);
+  letter-spacing:.005em;
+}
+.section-label h2 .serif{
+  font-family:var(--serif); font-style:italic; font-weight:400;
+  text-transform:none; color:var(--red); letter-spacing:-0.02em;
+  font-size:.7em;
+}
+.section-label .cap{
+  font-family:var(--mono); font-size:11px; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--ink-soft);
+}
+
+.pinned{
+  padding: 0 var(--gutter);
+  border-bottom: 2px solid var(--ink);
+}
+.pinned .row{
+  display:grid;
+  grid-template-columns: 60px 1.4fr 1fr 140px;
+  gap: clamp(16px, 2.4vw, 36px);
+  align-items:start;
+  padding: 32px 0;
+  border-bottom: 1px solid var(--ink-line);
+  position:relative;
+  transition: background .35s ease;
+}
+.pinned .row:last-child{ border-bottom:0; }
+.pinned .row:hover{ background: var(--ink-faint); }
+.pinned .row::before{
+  content:""; position:absolute; left:-16px; top:32px; width:6px; height:6px;
+  background: var(--red); border-radius:50%;
+}
+.pinned .row .pinmark{
+  font-family:var(--mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--red);
+  padding-top: .5em;
+}
+.pinned .row .ttl{
+  font-family:var(--display); font-weight:400;
+  font-size: clamp(28px, 3.4vw, 48px);
+  line-height:.96; text-transform:uppercase;
+  color:var(--ink);
+  letter-spacing:.005em;
+  transition: color .25s ease;
+}
+.pinned .row:hover .ttl{ color: var(--red); }
+.pinned .row .ttl .serif{
+  font-family:var(--serif); font-style:italic; font-weight:400;
+  text-transform:none; color:var(--red); letter-spacing:-0.02em;
+  font-size:.78em;
+}
+.pinned .row .dek{
+  font-family:var(--serif); font-style:italic;
+  font-size: clamp(15px, 1.2vw, 19px);
+  line-height:1.45;
+  color:var(--ink-soft);
+  max-width: 42ch;
+  padding-top: .3em;
+}
+.pinned .row .meta{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-soft);
+  text-align:right;
+  padding-top: .8em;
+  display:flex; flex-direction:column; gap:6px;
+}
+.pinned .row .meta .read{ color: var(--ink); }
+
+@media (max-width: 880px){
+  .pinned .row{ grid-template-columns: 1fr; gap: 12px; padding: 24px 0; }
+  .pinned .row::before{ left:-10px; top:28px; }
+  .pinned .row .meta{ text-align:left; flex-direction:row; gap:18px; padding-top:0; }
+}
+
+/* ============ ARCHIVE LIST ============ */
+.archive{
+  padding: 0 var(--gutter) clamp(56px, 8vw, 120px);
+}
+.archive .yr{
+  display:grid; grid-template-columns: 100px 1fr;
+  gap: clamp(20px, 3vw, 56px);
+  padding: 36px 0 12px;
+  border-top: 1px solid var(--ink-line);
+}
+.archive .yr:first-of-type{ border-top: 0; padding-top: 16px; }
+.archive .yr .y{
+  font-family:var(--display); font-weight:400;
+  font-size: clamp(40px, 4vw, 64px);
+  line-height:.9; color:var(--ink-soft);
+  letter-spacing:.005em;
+  position:sticky; top: 80px;
+  align-self:start;
+}
+.archive .yr .list{ display:flex; flex-direction:column; }
+
+.archive .item{
+  display:grid;
+  grid-template-columns: 1.6fr 1fr 120px 90px;
+  gap: clamp(14px, 2vw, 28px);
+  align-items:baseline;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--ink-line);
+  transition: background .3s ease, padding-left .3s ease;
+  position:relative;
+}
+.archive .item:last-child{ border-bottom:0; }
+.archive .item:hover{ background: var(--ink-faint); padding-left: 14px; }
+.archive .item .ttl{
+  font-family:var(--display); font-weight:400;
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height:1; text-transform:uppercase; color:var(--ink);
+  letter-spacing:.005em;
+  transition: color .25s ease;
+}
+.archive .item:hover .ttl{ color: var(--red); }
+.archive .item .ttl .serif{
+  font-family:var(--serif); font-style:italic; font-weight:400;
+  text-transform:none; color:var(--red); letter-spacing:-0.02em;
+  font-size:.74em;
+}
+.archive .item .dek{
+  font-family:var(--serif); font-style:italic;
+  font-size: 15px; line-height:1.4;
+  color:var(--ink-soft);
+  max-width: 38ch;
+}
+.archive .item .date{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-soft);
+}
+.archive .item .read{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-soft);
+  text-align:right;
+}
+.archive .item .read .num{ color:var(--ink); font-family:var(--display); font-size:18px; letter-spacing:0; margin-right:6px; }
+
+@media (max-width: 980px){
+  .archive .yr{ grid-template-columns: 1fr; gap: 8px; }
+  .archive .yr .y{ position:static; font-size: 36px; }
+  .archive .item{ grid-template-columns: 1fr; gap: 6px; padding: 18px 0; }
+  .archive .item:hover{ padding-left: 8px; }
+  .archive .item .meta-row{ display:flex; gap:18px; }
+  .archive .item .date, .archive .item .read{ text-align:left; }
+}
+
+/* ============ FOOTER ============ */
+footer{
+  border-top: 2px solid var(--ink);
+  padding: clamp(56px, 8vw, 96px) var(--gutter) 36px;
+  background: var(--paper);
+  position:relative; z-index:2;
+}
+footer .grid{
+  display:grid; grid-template-columns: 1.4fr 1fr 1fr;
+  gap: clamp(28px, 4vw, 72px);
+  margin-bottom: 56px;
+}
+footer .sub h3{
+  font-family:var(--display); font-weight:400;
+  font-size: clamp(28px, 3vw, 44px);
+  line-height:.96; text-transform:uppercase;
+  margin-bottom: 16px;
+  letter-spacing:.005em;
+}
+footer .sub h3 .stop{ color: var(--red); }
+footer .sub p{
+  font-family:var(--serif); font-style:italic;
+  font-size: clamp(16px, 1.2vw, 19px); line-height:1.4;
+  color:var(--ink-soft);
+  max-width: 36ch;
+  margin-bottom: 18px;
+}
+footer .sub form{
+  display:flex; gap: 0;
+  border:1.5px solid var(--ink);
+  max-width: 460px;
+}
+footer .sub input{
+  flex:1; padding: 14px 16px;
+  background: transparent; border:0; outline:0;
+  font-family:var(--body); font-size:14px;
+  color:var(--ink);
+}
+footer .sub input::placeholder{ color: var(--ink-soft); }
+footer .sub button{
+  background: var(--ink); color: var(--paper);
+  padding: 14px 22px;
+  font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+  font-weight:500;
+  transition: background .25s ease;
+  border-left: 1.5px solid var(--ink);
+}
+footer .sub button:hover{ background: var(--red); border-color: var(--red); }
+footer .sub .small{
+  margin-top: 10px;
+  font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase;
+  color: var(--ink-soft);
+}
+
+footer .col h4{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.2em; text-transform:uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 16px;
+}
+footer .col ul{ list-style:none; display:flex; flex-direction:column; gap: 10px; }
+footer .col li a{
+  font-family:var(--display); font-weight:400;
+  font-size: 22px; line-height:1; text-transform:uppercase;
+  letter-spacing:.005em;
+  transition: color .25s ease;
+}
+footer .col li a:hover{ color: var(--red); }
+
+footer .baseline{
+  display:flex; justify-content:space-between; align-items:center;
+  padding-top: 28px;
+  border-top: 1px solid var(--ink-line);
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.18em; text-transform:uppercase;
+  color: var(--ink-soft);
+}
+footer .baseline .visit{ color: var(--ink); }
+
+@media (max-width: 880px){
+  footer .grid{ grid-template-columns: 1fr; }
+  footer .baseline{ flex-direction:column; gap:14px; align-items:flex-start; }
+}
+
+/* entrance */
+.wordmark-big{ opacity:0; transform: translateY(.2em); animation: rowIn 1s cubic-bezier(.2,.7,.2,1) .05s forwards; }
+.masthead .dek{ opacity:0; animation: rowIn 1s ease .35s forwards; }
+.masthead .stamp-row{ opacity:0; animation: rowIn 1s ease .55s forwards; }
+@keyframes rowIn{ to{ opacity:1; transform:none; } }
+@media (prefers-reduced-motion: reduce){
+  .wordmark-big, .masthead .dek, .masthead .stamp-row{ opacity:1; transform:none; animation:none; }
+}
+</style>
+</head>
+<body>
+
+<!-- subtle neural-net background — placed before main, fixed, z-index 0 -->
+<svg class="netbg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <g class="link-group">
+    <path class="link" d="M180 220 L520 380 L820 240 L1180 460 L1430 320"/>
+    <path class="link" d="M260 760 L580 600 L920 720 L1260 580 L1500 700"/>
+    <path class="link" d="M520 380 L580 600"/>
+    <path class="link" d="M820 240 L920 720"/>
+    <path class="link" d="M1180 460 L1260 580"/>
+    <path class="link" d="M120 480 L520 380"/>
+    <path class="link" d="M120 480 L260 760"/>
+    <path class="link" d="M1430 320 L1500 700"/>
+  </g>
+  <g>
+    <circle class="node" cx="180" cy="220" r="2.5"/>
+    <circle class="node" cx="520" cy="380" r="3"/>
+    <circle class="node" cx="820" cy="240" r="2.5"/>
+    <circle class="node" cx="1180" cy="460" r="3"/>
+    <circle class="node" cx="1430" cy="320" r="2.5"/>
+    <circle class="node" cx="260" cy="760" r="2.5"/>
+    <circle class="node" cx="580" cy="600" r="3"/>
+    <circle class="node" cx="920" cy="720" r="2.5"/>
+    <circle class="node" cx="1260" cy="580" r="3"/>
+    <circle class="node" cx="1500" cy="700" r="2.5"/>
+    <circle class="node" cx="120" cy="480" r="2.5"/>
+  </g>
+</svg>
+
+<main>
+
+<!-- ============ TOPBAR ============ -->
+<nav class="topbar" aria-label="Site">
+  <a class="home-link" href="../">
+    <span class="arr">←</span><span>Anant Tyagi</span>
+  </a>
+  <div class="mark" aria-label="Eigen blog">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1" opacity=".5"/>
+      <circle cx="12" cy="12" r="2.6" fill="#C8341E"/>
+    </svg>
+    EIGEN<span class="dot">.</span>
+  </div>
+  <div class="right">
+    <span>Vol. <span class="red">I</span></span>
+    <span>RSS</span>
+  </div>
+</nav>
+
+<!-- ============ MASTHEAD ============ -->
+<header class="masthead">
+  <div class="meta-row">
+    <span>The Writing Game · MMXXVI</span>
+    <span class="red">Updated monthly, mostly</span>
+  </div>
+
+  <h1 class="wordmark-big">
+    <span>EIGEN</span><span class="stop">.</span>
+  </h1>
+
+  <p class="dek">
+    Notes from a few games played in <span class="red">parallel</span>. <br>
+    History reflections, sales observations, the occasional argument with myself in public.
+  </p>
+
+  <div class="stamp-row">
+    <span class="stamp"><span class="pip"></span>Long-form, mostly</span>
+    <span class="stamp">Reverse-chrono</span>
+    <span class="stamp">Sub-stack first, here second</span>
+    <span class="stamp">No tags, no taxonomy</span>
+  </div>
+</header>
+
+<!-- ============ PINNED ============ -->
+<div class="section-label">
+  <h2>Anchors <span class="serif">/ pinned</span></h2>
+  <span class="cap">Three pieces · the spine</span>
+</div>
+
+<section class="pinned" aria-label="Pinned essays">
+
+  <a class="row" href="essay.html">
+    <span class="pinmark">Pin · 01</span>
+    <h3 class="ttl">Boil Oceans With AI <span class="serif">but sprinkle the salt yourself</span></h3>
+    <p class="dek">The lowest form of AI usage is also the loudest. A short argument for keeping your fingers on the keyboard while letting the machine do the dishes.</p>
+    <div class="meta">
+      <span>Apr 21 · 2026</span>
+      <span class="read">3 min</span>
+    </div>
+  </a>
+
+  <a class="row" href="#">
+    <span class="pinmark">Pin · 02</span>
+    <h3 class="ttl">The Long Close <span class="serif">selling things people don't want yet</span></h3>
+    <p class="dek">Notes from twenty months of publisher sales. Trust compounds before features do — and the feature road-map is what kills most early deals.</p>
+    <div class="meta">
+      <span>Mar 04 · 2026</span>
+      <span class="read">9 min</span>
+    </div>
+  </a>
+
+  <a class="row" href="#">
+    <span class="pinmark">Pin · 03</span>
+    <h3 class="ttl">A Few Games At Once <span class="serif">on the polymath thing</span></h3>
+    <p class="dek">The Athenians did it. The Renaissance did it. Then we got specialised. The case for going wide on purpose, and the cost of pretending it's free.</p>
+    <div class="meta">
+      <span>Feb 18 · 2026</span>
+      <span class="read">11 min</span>
+    </div>
+  </a>
+
+</section>
+
+<!-- ============ ARCHIVE ============ -->
+<div class="section-label">
+  <h2>The Archive <span class="serif">/ everything else</span></h2>
+  <span class="cap">Reverse-chrono · no tags</span>
+</div>
+
+<section class="archive" aria-label="All essays">
+
+  <div class="yr">
+    <div class="y">2026</div>
+    <div class="list">
+
+      <a class="item" href="#">
+        <h3 class="ttl">Iggulden, Xerxes, And The <span class="serif">five hundred</span></h3>
+        <p class="dek">Reading Conn Iggulden's Athens cycle and noticing how good fiction sells history harder than history.</p>
+        <span class="date">May 02 · 2026</span>
+        <span class="read"><span class="num">07</span>min</span>
+      </a>
+
+      <a class="item" href="#">
+        <h3 class="ttl">What Cold Outreach Actually Costs</h3>
+        <p class="dek">Inbox math, opportunity cost, and why "just send more" is the worst advice in B2B.</p>
+        <span class="date">Apr 14 · 2026</span>
+        <span class="read"><span class="num">06</span>min</span>
+      </a>
+
+      <a class="item" href="#">
+        <h3 class="ttl">The ADHD Operator's Toolkit <span class="serif">that mostly works</span></h3>
+        <p class="dek">Concerta, calendar architecture, and the five rules I keep relearning the hard way.</p>
+        <span class="date">Apr 02 · 2026</span>
+        <span class="read"><span class="num">12</span>min</span>
+      </a>
+
+      <a class="item" href="#">
+        <h3 class="ttl">Mumbai Is The Best City <span class="serif">to be 25 in</span></h3>
+        <p class="dek">A short defence, in monsoon, written from the same coffee shop I always write from.</p>
+        <span class="date">Mar 28 · 2026</span>
+        <span class="read"><span class="num">04</span>min</span>
+      </a>
+
+      <a class="item" href="#">
+        <h3 class="ttl">Push, Pull, Legs, Repeat</h3>
+        <p class="dek">Eight years in the gym, one rule that survived everything else: don't miss twice.</p>
+        <span class="date">Feb 09 · 2026</span>
+        <span class="read"><span class="num">05</span>min</span>
+      </a>
+
+      <a class="item" href="#">
+        <h3 class="ttl">Notes On Story-Breaking <span class="serif">a thriller</span></h3>
+        <p class="dek">Six acts, one investigator, and the bit where you stop trying to be clever and start trying to be true.</p>
+        <span class="date">Jan 22 · 2026</span>
+        <span class="read"><span class="num">10</span>min</span>
+      </a>
+
+      <a class="item" href="#">
+        <h3 class="ttl">The Crypto Thesis I Keep Re-Writing</h3>
+        <p class="dek">What stays, what goes, and why "consumer" is the only word in the sentence that matters.</p>
+        <span class="date">Jan 06 · 2026</span>
+        <span class="read"><span class="num">14</span>min</span>
+      </a>
+
+    </div>
+  </div>
+
+  <div class="yr">
+    <div class="y">2025</div>
+    <div class="list">
+
+      <a class="item" href="#">
+        <h3 class="ttl">A Year Of Reading Wrong</h3>
+        <p class="dek">Twenty-eight books, six finished, four worth recommending. The shame and the system.</p>
+        <span class="date">Dec 30 · 2025</span>
+        <span class="read"><span class="num">08</span>min</span>
+      </a>
+
+      <a class="item" href="#">
+        <h3 class="ttl">On Quitting Things <span class="serif">cleanly</span></h3>
+        <p class="dek">Most exits are botched because you're trying to win the breakup. A field guide.</p>
+        <span class="date">Nov 12 · 2025</span>
+        <span class="read"><span class="num">06</span>min</span>
+      </a>
+
+      <a class="item" href="#">
+        <h3 class="ttl">What The Office Actually Costs</h3>
+        <p class="dek">Commute, focus tax, the open-floor-plan tax, and the underrated tax of being seen working.</p>
+        <span class="date">Sep 04 · 2025</span>
+        <span class="read"><span class="num">07</span>min</span>
+      </a>
+
+      <a class="item" href="#">
+        <h3 class="ttl">Profile · Nachi <span class="serif">on co-writing</span></h3>
+        <p class="dek">A friend, a flat in Bandra, and the only collaborator I trust to tell me the joke isn't landing.</p>
+        <span class="date">Jul 18 · 2025</span>
+        <span class="read"><span class="num">09</span>min</span>
+      </a>
+
+    </div>
+  </div>
+
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="grid">
+
+    <div class="sub">
+      <h3>Eigen<span class="stop">.</span> in your inbox</h3>
+      <p>One email a month, mostly first Sundays. No drip, no funnel, no "PS." Subscribe via Substack.</p>
+      <form action="https://ananttyagi.substack.com/subscribe" method="get" target="_blank" rel="noopener">
+        <input type="email" name="email" placeholder="email@somewhere.com" aria-label="Your email">
+        <button type="submit">Subscribe →</button>
+      </form>
+      <div class="small">Substack handles the list. I just write the things.</div>
+    </div>
+
+    <div class="col">
+      <h4>Elsewhere on the site</h4>
+      <ul>
+        <li><a href="../">Home</a></li>
+        <li><a href="../#dispatch">Games</a></li>
+        <li><a href="../#dispatch">Now</a></li>
+        <li><a href="../neural-net/">Neural Net</a></li>
+      </ul>
+    </div>
+
+    <div class="col">
+      <h4>Off-site</h4>
+      <ul>
+        <li><a href="https://ananttyagi.substack.com" target="_blank" rel="noopener">Substack</a></li>
+        <li><a href="https://instagram.com/ananttyagi7" target="_blank" rel="noopener">Instagram</a></li>
+        <li><a href="mailto:ananttyagi13@gmail.com">Email</a></li>
+        <li><a href="#">RSS</a></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="baseline">
+    <span>Anant Tyagi · Bombay · MMXXVI</span>
+    <span>Visit <span class="visit">XIV</span></span>
+  </div>
+</footer>
+
+</main>
+
+</body>
+</html>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Eigen favicon">
+  <title>E.</title>
+  <rect width="64" height="64" fill="#EDE6D2"/>
+  <!-- Hand-drawn 'E' as bars so it survives at 16px without font dependency. -->
+  <g fill="#15110D">
+    <rect x="14" y="14" width="30" height="6"/>
+    <rect x="14" y="14" width="6" height="36"/>
+    <rect x="14" y="29" width="24" height="6"/>
+    <rect x="14" y="44" width="30" height="6"/>
+  </g>
+  <!-- The period — the single brand move. -->
+  <rect x="48" y="44" width="6" height="6" fill="#C8341E"/>
+</svg>

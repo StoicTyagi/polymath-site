@@ -362,12 +362,54 @@ body::before{
 .tweaks .seg button.on{ background:var(--ink); color:var(--paper); }
 .tweaks input[type=range]{ width:100%; accent-color:var(--red); }
 
-/* ============ MOBILE STACK ============ */
+/* ============ MOBILE STACK (legacy text fallback — kept for prefers-reduced-motion only) ============ */
 .mobile-stack{ display:none; padding:24px var(--gutter) 56px; border-bottom:2px solid var(--ink); }
 @media (max-width: 640px){
-  .stage{ display:none; }
   .modebar{ display:none; }
-  .mobile-stack{ display:block; }
+  /* the SVG net is shown on mobile too — see "mobile portrait" block below */
+}
+/* ============ MOBILE PORTRAIT NET (Obsidian-style on small screens) ============ */
+@media (max-width: 640px){
+  .stage{ padding: 6px 14px 20px; }
+  .stage-wrap{
+    aspect-ratio: 760 / 1120;   /* portrait, matches rotated viewBox */
+    max-height: none;
+    margin-top: 6px;
+  }
+  .axis{ display:none; }   /* axis labels too cramped on phone */
+  .fig{
+    position:static; width:auto; margin: 14px var(--gutter) 0;
+    box-shadow: 4px 4px 0 var(--shadow-fig);
+    padding:12px 14px 14px;
+  }
+  .fig .name{ font-size: 26px; }
+  .fig .voice{ font-size: 16px; }
+  .netmap text{ font-size:14px; }
+  .netmap .eigen-label{ font-size:15px; letter-spacing:.04em; }
+  .netmap .eigen-num{ font-size:10px; letter-spacing:.18em; }
+  .netmap .sub-label{ font-size:11px; letter-spacing:.06em; }
+  .netmap .cross-label{ font-size:10px; }
+}
+
+/* ambient drift — Obsidian graph "floating" feel. Per-cluster phase via inline style. */
+.netmap .cluster{
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: clusterDrift var(--drift-d, 14s) ease-in-out infinite alternate;
+  animation-delay: var(--drift-delay, 0s);
+  will-change: transform;
+}
+@keyframes clusterDrift{
+  0%   { transform: translate(0px, 0px); }
+  25%  { transform: translate(var(--dx, 4px),  var(--dy, -3px)); }
+  50%  { transform: translate(calc(var(--dx, 4px) * -.6), calc(var(--dy, -3px) * 1.2)); }
+  75%  { transform: translate(calc(var(--dx, 4px) * .8), calc(var(--dy, -3px) * -.4)); }
+  100% { transform: translate(0px, 0px); }
+}
+.netmap.has-active .cluster,
+.netmap.has-cross .cluster{ animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce){
+  .netmap .cluster{ animation:none; }
 }
 .ms-cluster{ border-top:1.5px solid var(--ink-line); padding:22px 0 20px; }
 .ms-cluster:first-of-type{ border-top:0; }
@@ -520,13 +562,7 @@ footer a:hover{ color:var(--yellow); }
   </div>
 </section>
 
-<section class="mobile-stack">
-  <div id="ms-clusters"></div>
-  <div class="ms-wires">
-    <h3>Cross-wires</h3>
-    <ul id="ms-wires-list"></ul>
-  </div>
-</section>
+<!-- legacy text mobile-stack removed: the SVG net now renders on phones too -->
 
 <section class="under">
   <div class="left">
@@ -606,6 +642,13 @@ footer a:hover{ color:var(--yellow); }
     });
   });
 })();
+
+/* ============ MOBILE PORTRAIT ROTATION ============
+   Rotate cluster centers -90° so the landscape layout
+   reads as portrait on small screens. Keeps the same
+   constellation logic (sub-skills fan outward from cluster
+   center) without rebuilding positions by hand. */
+const IS_MOBILE_PORTRAIT = window.matchMedia('(max-width: 640px)').matches;
 
 /* ============ DATA ============ */
 const DATA = {
@@ -703,6 +746,18 @@ const DATA = {
     { id:'trust',         a:'SELLING',    b:'PERFORMING', label:'trust-first' }
   ]
 };
+
+/* Apply portrait rotation + portrait viewBox before any rendering */
+if (IS_MOBILE_PORTRAIT){
+  DATA.clusters.forEach(c => {
+    const ox = c.x, oy = c.y;
+    // rotate -90° (clockwise): (x,y) -> (y, -x)
+    c.x = oy;
+    c.y = -ox;
+  });
+  const _map = document.getElementById('netmap');
+  if (_map) _map.setAttribute('viewBox', '-380 -560 760 1120');
+}
 
 /* helpers */
 const $ = (s,r=document)=> r.querySelector(s);
@@ -976,6 +1031,16 @@ function drawStatic(){
     });
 
     g.appendChild(ns('circle', { class:'hit', 'data-eigen-hit':c.id, cx:en.x, cy:en.y, r:30 }));
+
+    /* obsidian-style ambient drift: per-cluster phase + amplitude */
+    const ampX = 3 + ((c.num.charCodeAt(1) * 7) % 5);     // 3–7px
+    const ampY = 3 + ((c.num.charCodeAt(1) * 11) % 5);    // 3–7px
+    const dur  = 12 + ((c.num.charCodeAt(1) * 13) % 8);   // 12–19s
+    const dly  = -((c.num.charCodeAt(1) * 17) % 10);      // -0..-9s phase offset
+    g.style.setProperty('--dx',         ampX + 'px');
+    g.style.setProperty('--dy',         ampY + 'px');
+    g.style.setProperty('--drift-d',    dur  + 's');
+    g.style.setProperty('--drift-delay',dly  + 's');
 
     clustersG.appendChild(g);
     c._g = g;
@@ -1461,30 +1526,7 @@ function loop(now){
 }
 requestAnimationFrame(loop);
 
-/* ============ MOBILE STACK ============ */
-const msList = $('#ms-clusters');
-DATA.clusters.forEach(c => {
-  const el = document.createElement('div');
-  el.className = 'ms-cluster';
-  el.innerHTML = `
-    <div class="ms-eigen"><span class="num">N° ${c.num}</span>${c.label}</div>
-    <div class="ms-of">${c.of}. ${escapeHtml(c.voice)}</div>
-    <div class="ms-list">
-      ${c.subs.map(s => {
-        const isCross = !!s.cross;
-        const cls = ['pill', s.lvl===0 ? 'hollow' : '', isCross ? 'cross' : ''].filter(Boolean).join(' ');
-        return `<span class="${cls}"><span class="d"></span>${escapeHtml(s.id)}</span>`;
-      }).join('')}
-    </div>
-  `;
-  msList.appendChild(el);
-});
-const msWires = $('#ms-wires-list');
-DATA.crosses.forEach(cr => {
-  const li = document.createElement('li');
-  li.innerHTML = `<b>${cr.label}</b> ${cr.a.toLowerCase()} <em>↔</em> ${cr.b.toLowerCase()}`;
-  msWires.appendChild(li);
-});
+/* mobile text-stack rendering removed — the SVG net now renders on phones */
 
 /* ============ MODE SWITCH (layout) ============ */
 function setMode(m){
