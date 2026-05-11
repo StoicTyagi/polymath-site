@@ -26,6 +26,9 @@
 
 <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
 <link rel="dns-prefetch" href="https://i.ytimg.com">
+<link rel="preconnect" href="https://www.youtube.com">
+<link rel="preconnect" href="https://s.ytimg.com" crossorigin>
+<link rel="preconnect" href="https://i.ytimg.com">
 <link href="https://fonts.bunny.net/css?family=anton:400|fraunces:300,400,500,600,700,800,900|inter:400,500,600,700|jetbrains-mono:400,500|instrument-serif:400i&display=swap" rel="stylesheet">
 
 <style>
@@ -2418,29 +2421,42 @@ $$('#games .card').forEach(card=>{
 .mp-min:hover { color: #fff; border-color: rgba(237,230,210,.85); }
 .mp-hint {
   position: absolute;
-  top: -28px; left: 16px;
+  top: -32px; left: 16px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 9px;
   letter-spacing: .18em;
   text-transform: uppercase;
-  color: rgba(237,230,210,.6);
-  background: rgba(20,14,10,.82);
+  color: rgba(237,230,210,.72);
+  background: rgba(20,14,10,.88);
   backdrop-filter: blur(8px);
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 999px;
   white-space: nowrap;
   opacity: 0;
   transform: translateY(4px);
   transition: opacity .35s, transform .35s;
   pointer-events: none;
+  border: 1px solid rgba(212,255,58,.35);
 }
-.music-player[data-muted="true"] .mp-hint { opacity: 1; transform: none; }
+.music-player[data-muted="true"] .mp-hint {
+  opacity: 1; transform: none;
+  animation: mpHintPulse 2.4s ease-in-out infinite;
+}
+@keyframes mpHintPulse{
+  0%, 100%{ box-shadow: 0 0 0 0 rgba(212,255,58,0); }
+  50%    { box-shadow: 0 0 0 6px rgba(212,255,58,.12); }
+}
 @media (max-width: 560px) {
   .music-player { bottom: 14px; left: 14px; padding: 8px 14px 8px 10px; gap: 10px; }
   .mp-album { width: 36px; height: 36px; }
   .mp-title { max-width: 110px; font-size: 12.5px; }
   .mp-artist { max-width: 110px; font-size: 9px; }
   .mp-eq { display: none; }
+  /* mobile: bigger hint, sits ABOVE the player and reads "tap to play music" */
+  .mp-hint{ font-size: 10.5px; padding: 6px 12px; top: -34px; letter-spacing:.14em; }
+}
+@media (prefers-reduced-motion: reduce){
+  .music-player[data-muted="true"] .mp-hint{ animation:none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .music-player[data-state="playing"] .mp-album img { animation: none; transform: none; }
@@ -2464,7 +2480,7 @@ $$('#games .card').forEach(card=>{
     <button class="mp-btn mp-play" id="mpPlay" aria-label="Play / Pause" type="button">▶</button>
     <button class="mp-btn mp-next" id="mpNext" aria-label="Next track" type="button">⏭</button>
   </div>
-  <span class="mp-hint" aria-hidden="true">Tap anywhere to unmute</span>
+  <span class="mp-hint" id="mpHint" aria-hidden="true">Tap anywhere to play music</span>
   <button class="mp-min" id="mpMin" aria-label="Minimize player" type="button">−</button>
   <div id="ytFrame" tabindex="-1" aria-hidden="true" style="position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;pointer-events:none;"></div>
 </div>
@@ -2490,8 +2506,10 @@ $$('#games .card').forEach(card=>{
   }
   let trackIdx = 0;
   let ytPlayer = null;
+  let ytReady = false;
   let isPlaying = false;
   let isMuted = true;
+  let userGestured = false;
   const player = document.getElementById('musicPlayer');
   const playBtn = document.getElementById('mpPlay');
   const prevBtn = document.getElementById('mpPrev');
@@ -2509,6 +2527,41 @@ $$('#games .card').forEach(card=>{
   function setIcon(playing){
     playBtn.innerHTML = playing ? '⏸' : '▶';
   }
+
+  // Try to start playback. Honoured only after the YT iframe is ready.
+  // If a user gesture has already happened, unmute too; else stay muted.
+  function tryStart(){
+    if (!ytReady || !ytPlayer) return;
+    try {
+      if (userGestured) {
+        ytPlayer.unMute();
+        ytPlayer.setVolume(70);
+        isMuted = false;
+        player.setAttribute('data-muted', 'false');
+      }
+      ytPlayer.playVideo();
+    } catch(_){}
+  }
+
+  // Capture the FIRST user gesture immediately — bound at script-eval time,
+  // long before the YT iframe API has loaded. This way, mobile taps that
+  // happen during the slow YT script load are still honoured.
+  function onFirstGesture(){
+    if (userGestured) return;
+    userGestured = true;
+    tryStart();
+    ['pointerdown','touchstart','click','keydown','scroll'].forEach(ev=>{
+      window.removeEventListener(ev, onFirstGesture, true);
+    });
+  }
+  ['pointerdown','touchstart','click','keydown','scroll'].forEach(ev=>{
+    window.addEventListener(ev, onFirstGesture, { capture:true, passive:true });
+  });
+
+  // Reveal the player immediately. The previous behaviour hid it until the YT
+  // iframe API loaded, which on slow mobile could be 5–10s of invisibility.
+  // Now the player UI is visible from page load; YT initialises behind it.
+  player.setAttribute('data-state', 'paused');
 
   function updateTrackInfo(){
     if (!ytPlayer || !ytPlayer.getVideoData) return;
@@ -2542,22 +2595,15 @@ $$('#games .card').forEach(card=>{
       },
       events: {
         onReady: function(e){
+          ytReady = true;
           player.setAttribute('data-state', 'paused');
+          // Try to start. If user already gestured (mobile-friendly path),
+          // tryStart() will unmute + play. If not, the muted iframe
+          // autoplays silently and waits for the first gesture handler above.
+          tryStart();
+          // Also try a plain muted autoplay so the iframe is "primed" and
+          // ready to flip to audio the moment a gesture lands.
           try { e.target.playVideo(); } catch(_){}
-          // unmute on first interaction anywhere
-          const unmute = () => {
-            try { ytPlayer.unMute(); ytPlayer.setVolume(70); } catch(_){}
-            isMuted = false;
-            player.setAttribute('data-muted', 'false');
-            window.removeEventListener('click', unmute, true);
-            window.removeEventListener('scroll', unmute, true);
-            window.removeEventListener('keydown', unmute, true);
-            window.removeEventListener('touchstart', unmute, true);
-          };
-          window.addEventListener('click', unmute, true);
-          window.addEventListener('scroll', unmute, true);
-          window.addEventListener('keydown', unmute, true);
-          window.addEventListener('touchstart', unmute, true);
         },
         onStateChange: function(e){
           if (e.data === YT.PlayerState.PLAYING) {
